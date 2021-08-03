@@ -1,4 +1,4 @@
-from models import Player, Tournament
+from models import Player, Tournament, PLAYERS_DATABASE
 
 
 def main_menu():
@@ -27,7 +27,8 @@ def create_player():
     last_name = input('Nom de famille :')
     genre = input("Genre ('F','M','X'\) :")
     birth_year = input('Année de naissance (4 chiffres) :')
-    Player(first_name, last_name, birth_year, genre).add_to_database()
+    rating = input('Classement (if any, leave blank sinon) :')
+    Player(first_name, last_name, birth_year, genre, rating).add_to_database()
 
     print('1. Ajouter une nouvelle personne.')
     print('2. Retour au menu principal')
@@ -38,5 +39,6 @@ def view_tournament(tournoi):
     print('---')
 
     print(f'Les participant.es sont :')
-    for player in tournoi.players:
-        print(f'   {player} ({player.rating}), avec (score) points')
+    for id in tournoi.players:
+        player = PLAYERS_DATABASE[id]
+        print(f'    - {player} ({player.rating}), avec (score) points')
