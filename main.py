@@ -1,5 +1,7 @@
-from views import main_menu, view_tournament
-from models import Player, Tournament, PLAYERS_PER_TOURNAMENT, PLAYERS_DATABASE
+from tournament.models import Player, players_database 
+from tournament.models.tournament import Tournament, PLAYERS_PER_TOURNAMENT
+from tournament.views import main_menu, view_tournament
+
 DEBUG = True
 
 def development():
@@ -11,19 +13,20 @@ def development():
     player6 = Player('José Leodan', 'Pupo', "2000", "M", 0).add_to_database()
     player7 = Player('Devon', 'White', "1997", "M", 0).add_to_database()
     player8 = Player('Shanna-Kay', 'Samuels', "1988", "F", 0).add_to_database()
-    print(f'   --- Database now has {len(PLAYERS_DATABASE)} players.')
+    print(f'   --- Database now has {len(players_database)} players.')
 
     tournoi = Tournament()
     tournoi.add_players([0,1,2,3,4,5,6,7])
     
     # first tour
-    print(tournoi.sort_players())
+    # print(tournoi.sort_players())
     # print(tournoi.generate_pairs())
+    print(tournoi.new_round())
     
     # val = input("Enter your value: ")
     # print(val)
 
-    # view_tournament(tournoi)
+    view_tournament(tournoi)
 
 if __name__ == '__main__' :
     development()

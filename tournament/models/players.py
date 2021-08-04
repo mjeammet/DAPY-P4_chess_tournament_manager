@@ -1,15 +1,15 @@
-PLAYERS_DATABASE = []
+players_database = []
 
 class Player:
     """Un joueur pour le tournoi.
-    # faire un dictionnaire pour le genre
-    # Sérialisation / Désérialisation ?
+    # TODO faire un dictionnaire pour le genre
+    # TODO Sérialisation / Désérialisation ?
     """
 
     def __init__(self, first_name, last_name, birth_date, gender, rating = 0):
+        self.id = len(players_database)+1
         self.first_name = first_name
-        self.last_name = last_name
-        
+        self.last_name = last_name        
         self.birth_date = birth_date
         self.gender = gender
         self.rating = rating
@@ -23,5 +23,5 @@ class Player:
 
 
     def add_to_database(self):
-        PLAYERS_DATABASE.append(self)
+        players_database.append(self)
         # print(f'{self.full_name} ajouté.e à la base de données.')

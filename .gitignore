@@ -1,3 +1,4 @@
 __pycache__/
 env/
-models/__pycache__/
+tournament/__pycache__/
+tournament/models/__pycache__/
