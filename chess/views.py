@@ -1,5 +1,5 @@
-from tournament.models.players import Player, players_database
-from tournament.models.tournament import Tournament
+from chess.models import Player, players_database
+from chess.models.tournament import Tournament
 
 
 def main_menu():
@@ -37,28 +37,32 @@ def create_player():
     last_name = input('Nom de famille :')
     genre = input("Genre ('F','M','X'\) :")
     birth_year = input('Année de naissance (4 chiffres) :')
-    rating = input('Classement (if any, leave blank sinon) :')
-    Player(first_name, last_name, birth_year, genre, rating).add_to_database()
+    ranking = input('Classement (if any, leave blank sinon) :')
+    Player(first_name, last_name, birth_year, genre, ranking).add_to_database()
 
     print('1. Ajouter une nouvelle personne.')
     print('2. Retour au menu principal')
     opt = input('\nQue souhaitez-vous faire ?')
 
 
-def list_tournament_players(tournament, sort_by = 'rating'):
-    """Lists players partaking in a tournament.
+def print_tournament_players(tournament, sort_by = 'ranking'):
+    """Prints players partaking in a tournament.
 
     Args:
-    - sort_by : the method by which to sort the players. Can be 'name' or default, 'rating'
-    Returns :
-    - a list of players, sorted by alphabetical order or rating. 
+    - sort_by : the method by which to sort the players. Can be 'name' or default, 'ranking'
+    Returns nothing
     """
     tournament.sort_players(by = sort_by)
 
     print(f'\nLes participant.es à {tournament.name} sont :')
     for player_id in tournament.players:
         player = players_database[player_id]
-        print(f'    - {player_id}. {player} (cl. {player.rating})')
+        print(f'    - {player_id}. {player} (cl. {player.ranking})')
+
+
+def print_tournament_turn(tournament):
+    print(tournament.turns)
+
 
 
 def view_tournament(tournament):

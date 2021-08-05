@@ -6,13 +6,13 @@ class Player:
     # TODO Sérialisation / Désérialisation ?
     """
 
-    def __init__(self, first_name, last_name, birth_date, gender, rating = 0):
+    def __init__(self, first_name, last_name, birth_date, gender, ranking = 0):
         self.id = len(players_database)+1
         self.first_name = first_name
         self.last_name = last_name        
         self.birth_date = birth_date
         self.gender = gender
-        self.rating = rating
+        self.ranking = ranking
 
     def __str__(self):
         return f'{self.full_name}'
