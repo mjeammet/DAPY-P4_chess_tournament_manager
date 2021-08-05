@@ -1,4 +1,4 @@
-players_database = []
+players_database = ['feinte pour ne pas partir de 0, à régler une fois qu\'on aura la db']
 
 class Player:
     """Un joueur pour le tournoi.

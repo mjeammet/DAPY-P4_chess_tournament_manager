@@ -45,14 +45,27 @@ def create_player():
     opt = input('\nQue souhaitez-vous faire ?')
 
 
+def list_tournament_players(tournament, sort_by = 'rating'):
+    """Lists players partaking in a tournament.
+
+    Args:
+    - sort_by : the method by which to sort the players. Can be 'name' or default, 'rating'
+    Returns :
+    - a list of players, sorted by alphabetical order or rating. 
+    """
+    tournament.sort_players(by = sort_by)
+
+    print(f'\nLes participant.es à {tournament.name} sont :')
+    for player_id in tournament.players:
+        player = players_database[player_id]
+        print(f'    - {player_id}. {player} (cl. {player.rating})')
+
+
 def view_tournament(tournament):
-    """ Prints infos on a tournament. """
+    """ Prints all infos on a tournament. """
     print('---')
 
-    print(f'Les participant.es sont :')
-    for id in tournament.players:
-        player = players_database[id]
-        print(f'    - {id}. {player} ({player.rating}), avec (score) points')
+    list_tournament_players(tournament)
     
     for turn in range(1,tournament.turn+1):
         print('Tour', turn, ":")

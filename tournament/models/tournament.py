@@ -26,6 +26,7 @@ class Tournament:
             print("Le tournoi est déjà plein, vous ne pouvez pas ajouter de participant.es.")
         else:
             if id < len(players_database):
+                # [player if getattr(player, 'id') == 3 else for player in players_database]
                 self.players.append(id)
                 print(f'{players_database[id]} ajouté.e au tournoi')
             else:
@@ -39,22 +40,45 @@ class Tournament:
     def add_players(self, list_of_integers):
         for num in list_of_integers:
             self.add_player_to_tournament(num)
-    
+        
+
+    class Turn:
+        """ Un tour de jeu. """
+
+        def __init__(self, number):
+            number = 0
+            self.matches = generate_pairs()
+
+
 
     def sort_players(self, by = 'score'):
         """ Sorts player to generate pairs according to the swiss tournament pattern. 
         
         Args:
-            by -- the parameter by which players will be sorted. Can be 'score' or 'rating'.
+        - by -- the parameter by which players will be sorted. Can be 'score' or 'rating'.
+
+        Returns:
+        - a sorted list of players
         """
-        # sorts player by rating, using the object 
-        sorted_players_as_objects = sorted([players_database[player_id] for player_id in self.players], key=lambda player:player.rating, reverse=True)
+
+        # if players are to be sorted by rating
+        players_as_objects = [players_database[player_id] for player_id in self.players]
+        if by == 'rating':
+            sorted_players_as_objects = sorted(players_as_objects, key=lambda player:player.rating, reverse=True)
+        elif by == 'score':
+            print('sorting by score plz')
+        elif by == 'name':
+            sorted_players_as_objects = sorted(players_as_objects, key=lambda player:player.last_name, reverse=False)
+        else:
+            print(f'Can sort by {by}. Please sort by \'score\', \'rating\' or \'name\' instead.')
+            return False
 
         # reverting back to indices 
         self.players = [players_database.index(player) for player in sorted_players_as_objects]
         return self.players
 
-    def generate_pairs(self):
+
+    def generate_pairs():
         """ Generate pairs of players according to swiss tournament pattern"""
         # sorts player
         self.sort_players(by = 'rating')
