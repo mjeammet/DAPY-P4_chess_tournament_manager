@@ -1,5 +1,12 @@
 players_database = ['feinte pour ne pas partir de 0, à régler une fois qu\'on aura la db']
 
+def get_player_object(id):
+    try: 
+        return players_database[id]
+    except Exception as error:
+        print("Unexpected error occurred.")
+        raise error 
+
 class Player:
     """Un joueur pour le tournoi.
     # TODO faire un dictionnaire pour le genre

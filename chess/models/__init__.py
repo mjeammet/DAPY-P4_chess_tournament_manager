@@ -1,1 +1,1 @@
-from .players import Player, players_database
+from .players import Player, players_database, get_player_object

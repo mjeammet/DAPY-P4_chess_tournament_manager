@@ -1,5 +1,5 @@
 from chess.models import players_database
-from chess.models.turn import Turn
+from chess.models.turn import Round
 
 
 PLAYERS_PER_TOURNAMENT = 8
@@ -14,7 +14,7 @@ class Tournament:
         self.name = name
         self.location = ''
         self.date = ''
-        self.turns = []
+        self.rounds = []
         self.players = []
     
     def add_player_to_tournament(self, id):
@@ -54,7 +54,9 @@ class Tournament:
         if by == 'ranking':
             sorted_players_as_objects = sorted(players_as_objects, key=lambda player:player.ranking, reverse=True)
         elif by == 'score':
-            print('sorting by score plz')
+            print(self.rounds)
+            sorted_players_as_objects = players_as_objects
+            pass
         elif by == 'name':
             sorted_players_as_objects = sorted(players_as_objects, key=lambda player:player.last_name)
         else:
@@ -66,20 +68,22 @@ class Tournament:
         return self.players
 
     def new_round(self):
-        """ Initiate a new round. Call pairs """
+        """ Initiate a new round."""
         # self.turns.append(self.generate_pairs())
 
         # Get the new turn's number
-        new_turn_number = int(len(self.turns)+1)
-        print(f'Init turn number {new_turn_number}')
+        round_number = int(len(self.rounds)+1)
+        round_name = f'Round_{round_number}'
+        print(f'Init turn number {round_number}')
 
         # Define sorting type depending on the turn's number
-        if new_turn_number == 1:
+        if round_number == 1:
             sorted_players_list = self.sort_players(by = 'ranking')
         else :
-            sorted_players_list = self.sort_players(by = 'ranking')
+            sorted_players_list = self.sort_players(by = 'score')
 
-        self.turns.append(Turn(players_list = sorted_players_list))
 
-        return self.turns
+        self.rounds.append(Round(turn_name = round_name, players_list = sorted_players_list))
+
+        return self.rounds
 
