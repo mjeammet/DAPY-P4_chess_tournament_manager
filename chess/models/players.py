@@ -1,3 +1,5 @@
+VERBOSE = False
+
 players_database = ['feinte pour ne pas partir de 0, à régler une fois qu\'on aura la db']
 
 def get_player_object(id):
@@ -28,7 +30,7 @@ class Player:
     def full_name(self):
         return f'{self.first_name} {self.last_name}'
 
-
     def add_to_database(self):
         players_database.append(self)
-        # print(f'{self.full_name} ajouté.e à la base de données.')
+        if VERBOSE:           
+            print(f'    {self.full_name} ajouté.e à la base de données.')
