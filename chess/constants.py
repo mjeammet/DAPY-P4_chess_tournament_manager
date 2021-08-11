@@ -1,0 +1,1 @@
+DATABASE_PATH = "./chess_database.json"

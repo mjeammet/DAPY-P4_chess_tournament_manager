@@ -1,8 +1,10 @@
 from chess.models import players_database, VERBOSE
 from chess.models.round import Round
-
+from chess.database import get_database_table
+from tinydb import Query
 
 PLAYERS_PER_TOURNAMENT = 8
+tournament_database = []
 
 class Tournament:
     """Un tournoi
@@ -18,6 +20,7 @@ class Tournament:
         self.players = []
         self.time_control = []
         self.description = ''
+        tournament_database.append(self)
 
     def add_player_to_tournament(self, id):
         """ Add a player to tournament, using their id. """
@@ -25,13 +28,17 @@ class Tournament:
         if len(self.players) >= PLAYERS_PER_TOURNAMENT:
             print("Le tournoi est déjà plein, vous ne pouvez pas ajouter de participant.es.")
         else:
-            if id < len(players_database):
-                # [player if getattr(player, 'id') == 3 else for player in players_database]
+            players_table = get_database_table("players")
+            
+            try:
+                player = Query()
+                # players_table.search(player.id == id)
+                print(players_table.search(player.id == id))
                 self.players.append(id)
                 if VERBOSE:
                     print(f'    {players_database[id]} ajouté.e au tournoi')
-            else:
-                print("Joueur inconnu. Veuillez l'ajouter à la base de données.")
+            except IndexError:
+                print(f"Joueur #{id} inconnu. Veuillez l'ajouter à la base de données.")
 
         # notifies if it was the eighth player
         if len(self.players) == PLAYERS_PER_TOURNAMENT:
@@ -51,6 +58,13 @@ class Tournament:
         Returns:
         - a sorted list of players
         """
+        if len(self.rounds) == 0:
+            # Add "0" score for everyone
+            players_score = [[player, 0] for player in self.players]
+        else:
+            # "un-tuple" players list
+            players_score = [[item1, item2] for tup in self.rounds[-1].matchs for item1, item2 in tup]
+
 
         if by == 'ranking':
             # get players objects instead of simply the indice in db
@@ -59,12 +73,12 @@ class Tournament:
             # reverting back to indices 
             self.players = [players_database.index(player) for player in sorted_players_as_objects]
         elif by == 'score':
-            # "un-tuple" players list
-            players = [[item1, item2] for tup in self.rounds[-1].matchs for item1, item2 in tup]
-            # sort players list by sc
-            sorted_players = sorted(players, key = lambda x: x[1], reverse=True)
+            # Sorts player by score of previous round
+            sorted_players = sorted(players_score, key = lambda x: x[1], reverse=True)
+            # print("sorted score = ", sorted_players)
 
             self.players = [item[0] for item in sorted_players]
+            return sorted_players
         elif by == 'name':
             # get players objects instead of simply the indice in db
             players_as_objects = [players_database[player_id] for player_id in self.players]
@@ -75,24 +89,26 @@ class Tournament:
             message = (f'Cannot sort by {by}. Please sort by \'score\', \'ranking\' or \'name\' instead.')
             raise Exception(message)
 
-        return self.players
+        # TODO change order of players in self.players
+
+        return players_score
 
     def new_round(self):
         """ Initiate a new round."""
-        # self.turns.append(self.generate_pairs())
+        # TODO add a test if tournament is not full.
 
         # Get the new turn's number
         round_number = int(len(self.rounds)+1)
         round_name = f'Round_{round_number}'
-        print(f'Init turn number {round_number}')
+        print(f'Start round number {round_number}')
 
-        
         # Define sorting type depending on the turn's number
         if round_number == 1:
             sorted_players_list = self.sort_players(by = 'ranking')
         else :
             sorted_players_list = self.sort_players(by = 'score')
 
+        # Add a new round with rank players and their associated scores
         this_round = Round(turn_name = round_name, players_list = sorted_players_list)
         self.rounds.append(this_round)
 

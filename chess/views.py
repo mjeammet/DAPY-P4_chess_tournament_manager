@@ -1,6 +1,4 @@
-from chess.models import Player, players_database
-from chess.models.tournament import Tournament
-
+from chess.models import Player, Tournament, players_database
 
 def main_menu():
     """Main menu, displayed upon launching the script. 
@@ -74,3 +72,8 @@ def view_tournament(tournament):
     for turn in range(1,tournament.turn+1):
         print('Tour', turn, ":")
         print('     ',tournament.generate_pairs())
+
+def print_all_players():
+    """Prints all current and past players in db."""
+    for player in db:
+        print(player)
