@@ -1,4 +1,4 @@
-from chess.models import Player, Tournament, players_database
+from chess.models import Player, Tournament
 
 def main_menu():
     """Main menu, displayed upon launching the script. 

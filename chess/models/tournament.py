@@ -1,4 +1,4 @@
-from chess.models import players_database, VERBOSE
+from chess.models import VERBOSE
 from chess.models.round import Round
 from chess.database import get_database_table
 from tinydb import Query
@@ -22,23 +22,26 @@ class Tournament:
         self.description = ''
         tournament_database.append(self)
 
+    # @property # TODO Upon uncommenting I get TypeError: 'bool' object is not callable
+    def is_full(self):
+        """A simple property to check if tournament is full (ie. contains 8 players)"""
+        return True if len(self.players) == 8 else False
+
     def add_player_to_tournament(self, id):
         """ Add a player to tournament, using their id. """
         # checks if tournament isn't already full
         if len(self.players) >= PLAYERS_PER_TOURNAMENT:
             print("Le tournoi est déjà plein, vous ne pouvez pas ajouter de participant.es.")
         else:
-            players_table = get_database_table("players")
-            
-            try:
-                player = Query()
-                # players_table.search(player.id == id)
-                print(players_table.search(player.id == id))
+            players_table = get_database_table("players")            
+            player = Query()
+            if players_table.search(player.id == id) != []:                 
+                # players_table.search(player.id == id)                
                 self.players.append(id)
                 if VERBOSE:
                     print(f'    {players_database[id]} ajouté.e au tournoi')
-            except IndexError:
-                print(f"Joueur #{id} inconnu. Veuillez l'ajouter à la base de données.")
+            else: 
+                print(f"Unknown player #{id}. Please select a valid player id.")
 
         # notifies if it was the eighth player
         if len(self.players) == PLAYERS_PER_TOURNAMENT:
