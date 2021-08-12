@@ -1,4 +1,4 @@
-from chess.models import get_player_object
+from chess.controllers import get_player_object
 
 class Match(tuple):
     def __init__(self, duet):

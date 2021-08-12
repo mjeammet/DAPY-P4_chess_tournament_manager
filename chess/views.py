@@ -1,5 +1,9 @@
 from chess.models import Player, Tournament
 
+# classe abstraite "view" et sous-classes "main_menu", "adding player", etc ?
+# class view
+
+
 def main_menu():
     """Main menu, displayed upon launching the script. 
     Called by main.py. 

@@ -2,9 +2,9 @@ from chess.models import VERBOSE
 from chess.models.round import Round
 from chess.database import get_database_table
 from tinydb import Query
+from chess.controllers import add_to_database, get_player_object
 
 PLAYERS_PER_TOURNAMENT = 8
-tournament_database = []
 
 class Tournament:
     """Un tournoi
@@ -20,7 +20,7 @@ class Tournament:
         self.players = []
         self.time_control = []
         self.description = ''
-        tournament_database.append(self)
+        add_to_database(object = self, type = "tournaments")
 
     # @property # TODO Upon uncommenting I get TypeError: 'bool' object is not callable
     def is_full(self):
@@ -63,23 +63,23 @@ class Tournament:
         """
         if len(self.rounds) == 0:
             # Add "0" score for everyone
-            players_score = [[player, 0] for player in self.players]
-        else:
+            players_score = [[player, 0] for player in self.players]     
+
+        players_table = get_database_table("players")
+        if by == 'ranking':
+            # filter the database to only get this tournament's entrants
+            entrants = players_table.search(Query().id.one_of(self.players))
+
+            # sorts players by ranking and then get their ids
+            self.players = [player['id'] for player in sorted(entrants, key = lambda x:x['ranking'], reverse=True)]
+        elif by == 'score':
             # "un-tuple" players list
             players_score = [[item1, item2] for tup in self.rounds[-1].matchs for item1, item2 in tup]
-
-
-        if by == 'ranking':
-            # get players objects instead of simply the indice in db
-            players_as_objects = [players_database[player_id] for player_id in self.players]
-            sorted_players_as_objects = sorted(players_as_objects, key=lambda player:player.ranking, reverse=True)
-            # reverting back to indices 
-            self.players = [players_database.index(player) for player in sorted_players_as_objects]
-        elif by == 'score':
+            
             # Sorts player by score of previous round
             sorted_players = sorted(players_score, key = lambda x: x[1], reverse=True)
             # print("sorted score = ", sorted_players)
-
+            
             self.players = [item[0] for item in sorted_players]
             return sorted_players
         elif by == 'name':
@@ -112,7 +112,7 @@ class Tournament:
             sorted_players_list = self.sort_players(by = 'score')
 
         # Add a new round with rank players and their associated scores
-        this_round = Round(turn_name = round_name, players_list = sorted_players_list)
+        this_round = Round(turn_name = round_name, players_and_scores_list = sorted_players_list)
         self.rounds.append(this_round)
 
         return self.rounds
