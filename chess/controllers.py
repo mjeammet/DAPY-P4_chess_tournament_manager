@@ -1,7 +1,9 @@
 from chess.database import get_database_table
 from chess.constants import DATABASE_PATH
+from chess.models import Player
 from . import database
 from tinydb import TinyDB
+from . import views
 
 VERBOSE = False
 
@@ -23,3 +25,33 @@ def add_to_database(object, type):
 # recup les scores de cette manière si les un-tupler dans la méthode "sort_players" ne me satisfait pas
 # then again, cette solution ne me satisfait pas non plus
 # def get_scores(players_list, tournament):
+
+class HomeController:
+    
+    def __init__(self):
+        self.view = views.HomeViewFromExampe()
+        self.view.render()
+        next_action = self.view.get_user_choice()
+        if next_action == '1':
+            return NewPlayerController()
+        else:
+            self.view.notify_invalid_choice()
+            return HomeController()
+
+class NewPlayerController:
+
+    def __init__(self):
+        self.view = views.NewPlayerView()
+        self.get_player_info()
+        self.view.render()
+        next_action = self.view.get_user_choice()
+        
+
+    def get_player_info(self):
+        print("Veuillez ajouter les informations du nouveau participant.")
+        first_name = input('Prénom :')
+        last_name = input('Nom de famille :')
+        genre = input("Genre ('F','M','X'\) :")
+        birth_year = input('Année de naissance (4 chiffres) :')
+        ranking = input('Classement (if any, leave blank sinon) :')
+        Player(first_name, last_name, birth_year, genre, ranking).add_to_database()

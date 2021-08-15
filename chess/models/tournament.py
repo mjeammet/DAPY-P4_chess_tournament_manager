@@ -2,7 +2,7 @@ from chess.models import VERBOSE
 from chess.models.round import Round
 from chess.database import get_database_table
 from tinydb import Query
-from chess.controllers import add_to_database, get_player_object
+# from chess.controllers import add_to_database
 
 PLAYERS_PER_TOURNAMENT = 8
 
@@ -10,17 +10,17 @@ class Tournament:
     """Un tournoi
     TODO Gestion du temps"""
 
-    def __init__(self, name='', number_of_turns = 4, description=''):
+    def __init__(self, name, location, number_of_turns = 4, description=''):
         # location, date, tournees, time_control,
         # self.id = int             # auto-increment ? 
         self.name = name
-        self.location = ''
-        self.date = ''
+        self.location = location
+        self.date = ""
         self.rounds = []
         self.players = []
         self.time_control = []
         self.description = ''
-        add_to_database(object = self, type = "tournaments")
+        # add_to_database(object = self, type = "tournaments")
 
     # @property # TODO Upon uncommenting I get TypeError: 'bool' object is not callable
     def is_full(self):
@@ -115,5 +115,6 @@ class Tournament:
         this_round = Round(turn_name = round_name, players_and_scores_list = sorted_players_list)
         self.rounds.append(this_round)
 
-        return self.rounds
+        return self.rounds[-1]
 
+    

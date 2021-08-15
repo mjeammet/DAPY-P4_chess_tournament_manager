@@ -3,48 +3,43 @@ from chess.models import Player, Tournament
 # classe abstraite "view" et sous-classes "main_menu", "adding player", etc ?
 # class view
 
+class BaseView():
+    @staticmethod
+    def render():
+        print("stuff")
 
-def main_menu():
-    """Main menu, displayed upon launching the script. 
-    Called by main.py. 
-    """
-    print('|=================|\n| ~ BIENVENUE ! ~ |\n|=================|')
-    print('Vous êtes au menu principal. Voici vos options:')
-    print('1. Ajouter un.e joueuse à la base de données.')
-    print('2. Créer un tournoi dans la base de données')
-    print('3. Ajouter un participant au tournoi.')
-    # print('4. Lancer le tournoi ou reprendre un tournoi en cours.')    
-    print('10. Quitter')
-    opt = input('\nQue souhaitez-vous faire ?')
+    def get_user_choice(self):
+        return input('\nQue souhaitez-vous faire ?').lower()
 
-    def browse(answer):
-        switcher = {
-            # TODO : add a default which does nothing
-            1: create_player(),
-            # 2: create_tournament(),
-            # 3: tournament.add_player(),
-            10: exit()
-        }
-        return switcher.get([answer], '')
+    def notify_invalid_choice(self):
+        print("Choix non valable!")
 
-    browse(opt)
+class HomeViewFromExampe(BaseView):
+    """View of the main menu."""
 
+    @staticmethod
+    def render():
+        print(
+            "Menu d'accueil\n"
+            "==============\n"
+            "1. Ajouter un.e joueuse à la base de données.\n"
+            "2. Créer un tournoi dans la base de données\n"
+            "3. Lancer le tournoi ou reprendre un tournoi en cours.\n"
+            "4. Ajouter un participant au tournoi.\n"
+            "5. Quitter le programme."
+        )
 
-def create_player():
+class NewPlayerView(BaseView):
     """ Adding a player to database """
-    print('---')
-    print('Ajout d\'un nouveau joueur !')
-
-    first_name = input('Prénom :')
-    last_name = input('Nom de famille :')
-    genre = input("Genre ('F','M','X'\) :")
-    birth_year = input('Année de naissance (4 chiffres) :')
-    ranking = input('Classement (if any, leave blank sinon) :')
-    Player(first_name, last_name, birth_year, genre, ranking).add_to_database()
-
-    print('1. Ajouter une nouvelle personne.')
-    print('2. Retour au menu principal')
-    opt = input('\nQue souhaitez-vous faire ?')
+    @staticmethod
+    def render():   
+        print(
+            "---\n"
+            "1. Ajouter une nouvelle personne.\n"
+            "2. Retour au menu principal.\n"
+        
+        )
+        print('Ajout d\'un nouveau joueur !')
 
 
 def print_tournament_players(tournament, sort_by = 'ranking'):

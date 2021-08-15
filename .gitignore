@@ -2,6 +2,5 @@ __pycache__/
 env/
 tournament/__pycache__/
 tournament/models/__pycache__/
-script_for_dev_purposes.py
 chess_database.json
 tests.py
