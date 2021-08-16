@@ -1,23 +1,22 @@
-from chess.controllers import HomeController
+from chess.controllers import ApplicationController
 from chess.models import Player, Tournament, PLAYERS_PER_TOURNAMENT, Match
-from tinydb import TinyDB, Query
 from chess.database import get_database_table
+from settings import DEBUG
 
-DEBUG = False
 
 def main():
     if DEBUG:
         players_table = get_database_table("players", empty = True)
-        tournament_table = get_database_table("tournament", empty = True)
+        tournament_table = get_database_table("tournaments", empty = True)
 
-        player1 = Player("Marie", "Pupo", "1990", "F", 0)
-        player2 = Player("Amandine", "Gay", "1984", "F", 5)
-        player3 = Player('Rosa', 'Parks', "1913", "F", 6)
-        player4 = Player("Rokhaya", "Diallo", "1978", "F", 3)
-        player5 = Player("Christiane", "Taubira", "1952", "F", 1)
-        player6 = Player('Maryse', 'Condé', "1937", "F", 0)
-        player7 = Player('Danièle', 'Obono', "1980", "F", 0)
-        player8 = Player('Aïssa', 'Maïga', "1975", "F", 0)
+        Player("Marie", "Pupo", "1990", "F", 0).save()
+        Player("Amandine", "Gay", "1984", "F", 5).save()
+        Player('Rosa', 'Parks', "1913", "F", 6).save()
+        Player("Rokhaya", "Diallo", "1978", "F", 3).save()
+        Player("Christiane", "Taubira", "1952", "F", 1).save()
+        Player('Maryse', 'Condé', "1937", "F", 0).save()
+        Player('Danièle', 'Obono', "1980", "F", 0).save()
+        Player('Aïssa', 'Maïga', "1975", "F", 0).save()
 
         # Fruit = Query()
         # players_table.remove(Fruit.first_name == "Marie")
@@ -26,6 +25,7 @@ def main():
 
         tournoi = Tournament(name = 'Test tournament 2021', location = "Paris, France")
         tournoi.add_players([1,2,3,4,5,6,7,84, 8])
+        tournoi.save()
         
         round1 = tournoi.new_round()
         print('    before :', tournoi.rounds[0])
@@ -67,7 +67,8 @@ def main():
         # print_tournament_players(tournoi, sort_by='rating')
         # print_tournament_turn(tournoi)
     else:
-        return HomeController()
+        app = ApplicationController()
+        app.start()
 
 
 if __name__ == '__main__' :

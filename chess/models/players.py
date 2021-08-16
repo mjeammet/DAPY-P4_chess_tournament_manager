@@ -1,11 +1,8 @@
 from chess.database import get_database_table
 from tinydb import TinyDB
-from chess.constants import DATABASE_PATH
+from settings import DATABASE_PATH, VERBOSE
 # from chess.controllers import add_to_database
 
-VERBOSE = False
-
-players_table = get_database_table("players")
 
 class Player():
     """Un joueur pour le tournoi.
@@ -14,13 +11,13 @@ class Player():
     """
 
     def __init__(self, first_name, last_name, birth_date, gender, ranking = 0):
+        players_table = get_database_table("players")
         self.id = len(players_table)+1
         self.first_name = first_name
         self.last_name = last_name        
         self.birth_date = birth_date
         self.gender = gender
         self.ranking = ranking
-        # add_to_database(self, 'players')
 
     def __str__(self):
         return f'{self.full_name}'
@@ -30,7 +27,12 @@ class Player():
         return f'{self.first_name} {self.last_name}'
 
     def save(self):
-        players_table = get_database_table("players")
+        type = "players"
+        players_table = get_database_table(type)
+        # players_database.append(object) # relique de quand la db était une simple liste 
+        players_table.insert(vars(self))
+        if VERBOSE:           
+            print(f'    {self.full_name} ajouté.e à la base de données.')
 
 
     # def serialize(self):

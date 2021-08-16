@@ -1,4 +1,4 @@
-from chess.models import VERBOSE
+from settings import VERBOSE
 from chess.models.round import Round
 from chess.database import get_database_table
 from tinydb import Query
@@ -10,17 +10,17 @@ class Tournament:
     """Un tournoi
     TODO Gestion du temps"""
 
-    def __init__(self, name, location, number_of_turns = 4, description=''):
+    def __init__(self, name, location, date='', rounds = [], players = [], time_control = '', description=''):
         # location, date, tournees, time_control,
         # self.id = int             # auto-increment ? 
         self.name = name
         self.location = location
-        self.date = ""
-        self.rounds = []
-        self.players = []
-        self.time_control = []
-        self.description = ''
-        # add_to_database(object = self, type = "tournaments")
+        self.date = date
+        self.rounds = rounds
+        self.players = players
+        self.time_control = time_control
+        self.description = description
+        self.save()
 
     # @property # TODO Upon uncommenting I get TypeError: 'bool' object is not callable
     def is_full(self):
@@ -117,4 +117,11 @@ class Tournament:
 
         return self.rounds[-1]
 
-    
+    def save(self):
+        type = "tournaments"
+        players_table = get_database_table(type)
+        # players_database.append(object) # relique de quand la db était une simple liste 
+        players_table.insert(vars(self))
+        if VERBOSE:           
+            print(f'    {self.full_name} ajouté.e à la base de données.')
+        return 0
