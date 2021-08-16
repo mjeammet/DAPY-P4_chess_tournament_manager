@@ -55,9 +55,14 @@ class NewPlayerController:
         self.view = views.NewPlayerView()
 
     def run(self):
-        new_player_info = self.view.get_new_player_info()
+        new_player_info = []
+        new_player_id = get_database_table("players").all()[-1]["id"]
+        new_player_info.append(new_player_id)
+        inputted_info = self.view.get_new_player_info()
+        new_player_info.extend(inputted_info)
+        # print(new_player_info)
         Player(*new_player_info).save()
-        print(f'---\n{new_player_info[0]} succesfully added.')
+        print(f'---\n{new_player_info[1]} {new_player_info[2]} succesfully added with id {new_player_id}.')
 
         self.view.render()
         next_action = self.view.get_user_choice()

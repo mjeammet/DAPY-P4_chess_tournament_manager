@@ -1,5 +1,4 @@
 from chess.database import get_database_table
-from tinydb import TinyDB
 from settings import DATABASE_PATH, VERBOSE
 # from chess.controllers import add_to_database
 
@@ -10,9 +9,8 @@ class Player():
     # TODO Sérialisation / Désérialisation ?
     """
 
-    def __init__(self, first_name, last_name, birth_date, gender, ranking = 0):
-        players_table = get_database_table("players")
-        self.id = len(players_table)+1
+    def __init__(self, id, first_name, last_name, birth_date, gender, ranking = 0):
+        self.id = id
         self.first_name = first_name
         self.last_name = last_name        
         self.birth_date = birth_date

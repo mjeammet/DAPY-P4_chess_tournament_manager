@@ -1,10 +1,7 @@
-from settings import VERBOSE
+from settings import VERBOSE, PLAYERS_PER_TOURNAMENT
 from chess.models.round import Round
 from chess.database import get_database_table
 from tinydb import Query
-# from chess.controllers import add_to_database
-
-PLAYERS_PER_TOURNAMENT = 8
 
 class Tournament:
     """Un tournoi

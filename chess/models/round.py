@@ -1,7 +1,6 @@
 from chess.models.match import Match
+from settings import PLAYERS_PER_TOURNAMENT
 from datetime import datetime
-
-PLAYERS_PER_TOURNAMENT = 8
 
 class Round(list):
     """ Un tour de jeu. """
