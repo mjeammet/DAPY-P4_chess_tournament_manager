@@ -1,9 +1,12 @@
 # App execution settings
-DEBUG = False
+TEST = False
 VERBOSE = False
 
 # Database 
-DATABASE_PATH = "./chess_database.json"
+if TEST :
+    DATABASE_PATH = "./test_db.json"
+else:
+    DATABASE_PATH = "./chess_database.json"
 
 # Tournament details 
 PLAYERS_PER_TOURNAMENT = 8

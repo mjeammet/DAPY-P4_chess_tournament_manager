@@ -1,17 +1,21 @@
 from tinydb import TinyDB, Query
 from settings import DATABASE_PATH
 
-def get_database_table(type, empty=False):
+def get_database_table(table_name):
     db = TinyDB(DATABASE_PATH)
-    table = db.table(type)
-    
-    if empty == True:
-        # Empty tables for dev purposes 
-        table.truncate()
-       
-    # players_table.insert_multiple()
-
+    table = db.table(table_name)
     return table
+
+def empty_database_table(table_name, force = False):
+    table = get_database_table(table_name)
+
+    if force == False:
+        confirmation = input(f"Are you sure you want to empty {table_name} table ? ")
+        if confirmation:
+            return 0
+    
+    table.truncate()
+
 
 
 """ def database_verification():

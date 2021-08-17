@@ -10,7 +10,7 @@ class Player():
     """
 
     def __init__(self, id, first_name, last_name, birth_date, gender, ranking = 0):
-        self.id = id
+        # self.id = id
         self.first_name = first_name
         self.last_name = last_name        
         self.birth_date = birth_date
@@ -25,9 +25,10 @@ class Player():
         return f'{self.first_name} {self.last_name}'
 
     def save(self):
-        type = "players"
-        players_table = get_database_table(type)
+        table_name = "players"
+        players_table = get_database_table(table_name)
         # players_database.append(object) # relique de quand la db était une simple liste 
+        # print(vars(self))
         players_table.insert(vars(self))
         if VERBOSE:           
             print(f'    {self.full_name} ajouté.e à la base de données.')

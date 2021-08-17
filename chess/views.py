@@ -3,10 +3,6 @@
 # classe abstraite "view" et sous-classes "main_menu", "adding player", etc ?
 # class view
 
-from chess.database import get_database_table
-from tinydb import Query
-
-
 class BaseView():
     @staticmethod
     def render():
@@ -29,12 +25,24 @@ class HomeViewFromExampe(BaseView):
         print(
             "Menu d'accueil\n"
             "==============\n"
-            "1. Ajouter un.e joueuse à la base de données.\n"
-            "2. Créer un tournoi dans la base de données\n"
+            "1. Menu des joueurs.\n"
+            "2. Créer un tournoi dans la base de données.\n"
             "3. Ajouter un participant au tournoi.\n"
             "4. Lancer le tournoi ou reprendre un tournoi en cours.\n"
             "5. Afficher rapports.\n"
             "6. Vider base de données\n"
+            "\n0. Quitter le programme.\n"
+        )
+
+class PlayerHomeView(BaseView):
+
+    @staticmethod
+    def render():
+        print(
+            "\n--- Menu des joueurs ---\n"
+            "1. Ajouter un joueur à la base de données.\n"
+            "2. Mettre à jour les données d'un joueur.\n"
+            "0. Retour au menu principal.\n"
             "\n0. Quitter le programme.\n"
         )
 
@@ -83,35 +91,16 @@ class ReportMenu(BaseView):
         )
 
     @staticmethod
-    def print_players(player_list):
+    def print_players(unserialized_players_list):
         """Prints all current and past players in db."""
-        for player in player_list:
+        for player in unserialized_players_list:
             print(player)
 
-    def prints_entrants(self, tournament_id, sort_by = "ranking"):
-        """Prints players partaking in a tournament.
+def print_tournament_rounds(tournament):
+    print(tournament.rounds)
 
-        Args:
-        - sort_by : the method by which to sort the players. Can be 'name' or default, 'ranking'
-        Returns nothing
-        """
-        players_db = get_database_table("players")
-        
-        # selected_tournament["players"].sort_players(by = sort_by)
-        # print(players_db)
-
-        # print(players_db.search(Query().id.one_of(list(selected_tournament["players"])))) # makes another list so, quite ugly       
-        for entrant_id in selected_tournament["players"]:
-            player = players_db.search(Query().id == int(entrant_id))
-            print(player)
-            print(f'    - {entrant_id}. {player["first_name"]} ')
-            # print(f'cl. {player["ranking"]})')        
-
-
-def print_tournament_turn(tournament):
-    print(tournament.turns)
-
-
+def print_tournament_match(tournament):
+    print(tournament.matchs)
 
 def print_tournaments(tournament):
     """ Prints all infos on a tournament. """
@@ -122,5 +111,3 @@ def print_tournaments(tournament):
     for turn in range(1,tournament.turn+1):
         print('Tour', turn, ":")
         print('     ',tournament.generate_pairs())
-
-

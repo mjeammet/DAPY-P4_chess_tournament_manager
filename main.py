@@ -1,22 +1,24 @@
 from chess.controllers import ApplicationController
 from chess.models import Player, Tournament, PLAYERS_PER_TOURNAMENT, Match
-from chess.database import get_database_table
-from settings import DEBUG
+from chess.database import get_database_table, empty_database_table
+from settings import TEST
 
 
 def main():
-    if DEBUG:
-        players_table = get_database_table("players", empty = True)
-        tournament_table = get_database_table("tournaments", empty = True)
+    if TEST:
+        empty_database_table("players", force=True)
+        empty_database_table("tournaments", force=True)
+        players_table = get_database_table("players")
+        tournament_table = get_database_table("tournaments")
 
-        Player("Marie", "Pupo", "1990", "F", 0).save()
-        Player("Amandine", "Gay", "1984", "F", 5).save()
-        Player('Rosa', 'Parks', "1913", "F", 6).save()
-        Player("Rokhaya", "Diallo", "1978", "F", 3).save()
-        Player("Christiane", "Taubira", "1952", "F", 1).save()
-        Player('Maryse', 'Condé', "1937", "F", 0).save()
-        Player('Danièle', 'Obono', "1980", "F", 0).save()
-        Player('Aïssa', 'Maïga', "1975", "F", 0).save()
+        Player(1, "Marie", "Pupo", "1990", "F", 0).save()
+        Player(2, "Amandine", "Gay", "1984", "F", 5).save()
+        Player(3, 'Rosa', 'Parks', "1913", "F", 6).save()
+        Player(4, "Rokhaya", "Diallo", "1978", "F", 3).save()
+        Player(5, "Christiane", "Taubira", "1952", "F", 1).save()
+        Player(6, 'Maryse', 'Condé', "1937", "F", 0).save()
+        Player(7, 'Danièle', 'Obono', "1980", "F", 0).save()
+        Player(8, 'Aïssa', 'Maïga', "1975", "F", 0).save()
 
         # Fruit = Query()
         # players_table.remove(Fruit.first_name == "Marie")

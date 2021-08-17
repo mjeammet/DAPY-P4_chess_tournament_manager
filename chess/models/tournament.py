@@ -9,7 +9,7 @@ class Tournament:
 
     def __init__(self, name, location, date='', rounds = [], players = [], time_control = '', description=''):
         # location, date, tournees, time_control,
-        # self.id = int             # auto-increment ? 
+        # self.id = int             # auto-increment ?
         self.name = name
         self.location = location
         self.date = date
