@@ -1,4 +1,4 @@
-from settings import VERBOSE, PLAYERS_PER_TOURNAMENT
+from settings import VERBOSE, PLAYERS_PER_TOURNAMENT, ROUNDS_PER_TOURNAMENT
 from chess.models.round import Round
 from chess.database import get_database_table
 from tinydb import Query
@@ -99,20 +99,25 @@ class Tournament:
 
         # Get the new turn's number
         round_number = int(len(self.rounds)+1)
-        round_name = f'Round_{round_number}'
-        print(f'Start round number {round_number}')
 
-        # Define sorting type depending on the turn's number
-        if round_number == 1:
-            sorted_players_list = self.sort_players(by = 'ranking')
-        else :
-            sorted_players_list = self.sort_players(by = 'score')
+        if round_number >= ROUNDS_PER_TOURNAMENT:
+            print(f"Le nombre de tour par tournoi ne peut pas excéder {ROUNDS_PER_TOURNAMENT} (voir \"settings.py\").")
 
-        # Add a new round with rank players and their associated scores
-        this_round = Round(turn_name = round_name, players_and_scores_list = sorted_players_list)
-        self.rounds.append(this_round)
+        else:
+            round_name = f'Round_{round_number}'
+            print(f'Start round number {round_number}')
 
-        return self.rounds[-1]
+            # Define sorting type depending on the turn's number
+            if round_number == 1:
+                sorted_players_list = self.sort_players(by = 'ranking')
+            else :
+                sorted_players_list = self.sort_players(by = 'score')
+
+            # Add a new round with rank players and their associated scores
+            this_round = Round(turn_name = round_name, players_and_scores_list = sorted_players_list)
+            self.rounds.append(this_round)
+
+            return self.rounds[-1]
 
     def save(self):
         type = "tournaments"

@@ -9,8 +9,7 @@ class Player():
     # TODO Sérialisation / Désérialisation ?
     """
 
-    def __init__(self, id, first_name, last_name, birth_date, gender, ranking = 0):
-        # self.id = id
+    def __init__(self, first_name, last_name, birth_date, gender, ranking = 0):
         self.first_name = first_name
         self.last_name = last_name        
         self.birth_date = birth_date

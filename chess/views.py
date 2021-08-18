@@ -3,6 +3,9 @@
 # classe abstraite "view" et sous-classes "main_menu", "adding player", etc ?
 # class view
 
+from os import stat
+
+
 class BaseView():
     @staticmethod
     def render():
@@ -17,70 +20,71 @@ class BaseView():
     def get_user_tournament_choice(self):
         return input('\nVeuillez entrer l\'id d\'un tournoi existant ? ')
 
+def print_header(title):
+    print(
+        "\n|========================================|\n"
+        f"|\t\t{title}\t\t|\n"
+        "|========================================|"
+    )
+    
 class HomeViewFromExampe(BaseView):
     """View of the main menu."""
 
     @staticmethod
     def render():
+        print_header(title = "MENU PRINCIPAL")
         print(
-            "Menu d'accueil\n"
-            "==============\n"
-            "1. Menu des joueurs.\n"
-            "2. Créer un tournoi dans la base de données.\n"
-            "3. Ajouter un participant au tournoi.\n"
-            "4. Lancer le tournoi ou reprendre un tournoi en cours.\n"
-            "5. Afficher rapports.\n"
-            "6. Vider base de données\n"
-            "\n0. Quitter le programme.\n"
+            "1. Gestion des joueurs.\n"
+            "2. Gestion des tournois.\n"
+            "3. Impression des rapports.\n"
+            "4. Vider base de données\n"
+            "\nQ. Quitter le programme.\n"
         )
 
 class PlayerHomeView(BaseView):
 
     @staticmethod
     def render():
+        print_header(title = "MENU DES JOUEURS")
         print(
-            "\n--- Menu des joueurs ---\n"
             "1. Ajouter un joueur à la base de données.\n"
             "2. Mettre à jour les données d'un joueur.\n"
             "0. Retour au menu principal.\n"
-            "\n0. Quitter le programme.\n"
+            "\nQ. Quitter le programme.\n"
         )
 
-class NewPlayerView(BaseView):
-    """ Adding a player to database """
+
+class TournamentHomeView(BaseView):
+
     @staticmethod
-    def render():   
+    def render():
+        print_header(title = "MENU DES TOURNOIS")
         print(
-            "---\n"
-            "1. Ajouter une nouvelle personne.\n"
-            "2. Retour au menu principal.\n"        
-        )
-    
-    def get_new_player_info(self):
-        print("Veuillez ajouter les informations du nouveau participant.")
-        first_name = input('Prénom :')
-        last_name = input('Nom de famille :')
-        gender = input("Genre ('F','M','X'\) :")
-        birth_year = input('Année de naissance (4 chiffres) :')
-        ranking = input('Classement (if any, leave blank sinon) :')
-        return [first_name, last_name, birth_year, gender, ranking]
+            "1. Créer un nouveau tournoi.\n"
+            "2. Ajouter des joueurs à un tournoi.\n"
+            "3. Ouvrir un round.\n"
+            "4. Entrer les résultats d'un round ouvert.\n"
+            "\n0. Retour au menu principal.\n"
+            "Q. Quitter le programme.\n"
+        ) 
+
 
 class NewTournamentView(BaseView):
 
     @staticmethod
     def render():
+        print_header(title = "NOUVEAU TOURNOI")
         print(
-            "1. Launch new tournament.\n"
-            "2. Retour au menu principal.\n"
-            "3. Quitter.\n"
+            "A écrire.\n"
         )
+
 
 class ReportMenu(BaseView):
 
     @staticmethod
     def render():
+        print_header(title = "MENU DES RAPPORTS")
         print(
-            "----------\n"
             "1. Liste de tous les acteurs.\n"            
             "2. Liste de tous les tournois.\n"
             "3. Liste de tous les joueurs d'un tournoi.\n"
@@ -92,10 +96,32 @@ class ReportMenu(BaseView):
 
     @staticmethod
     def print_players(unserialized_players_list):
+        # print(unserialized_players_list)
         """Prints all current and past players in db."""
         for player in unserialized_players_list:
-            print(player)
+            print(f'- {player["first_name"]}')
 
+    @staticmethod
+    def print_tournaments(tournaments_list):
+        """Prints all current and past players in db."""
+        for tournament in tournaments_list:
+            print(tournament)
+
+
+class EndView:
+    """Vue responsable de l'affichage de menu de fin d'application."""
+
+    def render(self):
+        print("Voulez-vous vraiment quitter l'application ?")
+
+    def confirm_exit(self):
+        return input("Sûr (Y/N) ? ")
+
+    def notify_invalid_choice(self):
+        print("Choix non valable !\n\n")
+
+        
+# FUNCTIONS TO REWORK
 def print_tournament_rounds(tournament):
     print(tournament.rounds)
 
