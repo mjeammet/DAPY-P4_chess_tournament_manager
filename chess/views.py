@@ -41,6 +41,12 @@ class HomeViewFromExampe(BaseView):
             "\nQ. Quitter le programme.\n"
         )
 
+    def print_welcome(self):
+        print(
+            "Tournament manager v.0.10.0.\n"
+            "Read README.md."
+            )
+
 class PlayerHomeView(BaseView):
 
     @staticmethod
@@ -53,6 +59,20 @@ class PlayerHomeView(BaseView):
             "\nQ. Quitter le programme.\n"
         )
 
+    def get_first_name(self):
+        return input('Prénom :')
+    
+    def get_last_name(self):
+        return input('Nom de famille :')
+
+    def get_gender(self):
+        return input("Genre ('F','M','X'\) :")
+    
+    def get_birth_date(self):
+        input('Année de naissance (format DD-MM-YYYY) :')
+
+    def get_ranking(self):
+        input('Classement (if any, leave blank sinon) :')
 
 class TournamentHomeView(BaseView):
 
