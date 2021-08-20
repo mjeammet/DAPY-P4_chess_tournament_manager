@@ -74,6 +74,9 @@ class PlayerHomeView(BaseView):
     def get_ranking(self):
         return input('Classement (entier positif) :')
 
+    # def print_confirmation_added_player():
+    #     return 
+
     def print_homonyme(self, inputted_data, homonymes_list):
         print(
             "Vous souhaitez ajouter:\n"
@@ -93,27 +96,34 @@ class PlayerHomeView(BaseView):
 class TournamentHomeView(BaseView):
 
     @staticmethod
-    def render():
+    def render(current_tournament):
         print_header(title = "MENU DES TOURNOIS")
+        print(f'Current tournament : {current_tournament}')
         print(
+            "\n"
             "1. Créer un nouveau tournoi.\n"
-            "2. Ajouter des joueurs à un tournoi.\n"
-            "3. Ouvrir un round.\n"
-            "4. Entrer les résultats d'un round ouvert.\n"
-            "\n0. Retour au menu principal.\n"
-            "Q. Quitter le programme.\n"
+            "2. Sélectionner un tournoi comme le tournoi actuel.\n"
+            "3. Ajouter des joueurs à un tournoi.\n"
+            "4. Ouvrir un round.\n"
+            "5. Entrer les résultats d'un round ouvert.\n"
+            "0. Retour au menu principal.\n"
+            "9. Quitter le programme.\n"
         ) 
 
+    def get_name(self):
+        return input("Nom du tournoi : ")
+    
+    def get_location(self):
+        return input("Lieu du tournoi : ")
+    
+    def get_date(self):
+        return input("Date du tournoi : ")
 
-class NewTournamentView(BaseView):
+    def get_time_control(self):
+        return input("Type de contrôle du temps (peut être 'bullet', 'blitz' ou 'fast') : ")
 
-    @staticmethod
-    def render():
-        print_header(title = "NOUVEAU TOURNOI")
-        print(
-            "A écrire.\n"
-        )
-
+    def get_description(self):
+        return input("(optional) Description : ")
 
 class ReportMenu(BaseView):
 

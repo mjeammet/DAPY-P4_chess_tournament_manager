@@ -56,7 +56,7 @@ class PlayerHomeController:
         self.view.render()
         next_action = self.view.get_user_choice()
         if next_action == '1':
-            self.add_player()
+            self.get_new_player_info()
             return PlayerHomeController()
         elif next_action == "2":
             self.update_player_infos()
@@ -69,7 +69,7 @@ class PlayerHomeController:
             self.view.notify_invalid_choice()
             return PlayerHomeController()
 
-    def add_player(self):
+    def get_new_player_info(self):
         print("Ajout d'un nouveau participant.")
         # TODO faire ça en plus class ou on valide avec une fonction dédiée ? Un wrapper ?
         
@@ -91,34 +91,32 @@ class PlayerHomeController:
             self.view.print_homonyme(new_player_info, existing_homonyme)
             next_action = self.view.get_user_choice()
             if next_action == '1':
-                self.update_player_infos()                
-                pass
+                self.update_player_infos()
             elif next_action == "2":
-                self.add_object_to_db(Player(*new_player_info))
-                return PlayerHomeController()
+                self.add_player_to_database(new_player_info)
             elif next_action == "3":
-                return PlayerHomeController()
-            else:
-                self.view.notify_invalid_choice()
                 print("Ajout annulé.\n")
-                return PlayerHomeController()
+            else:
+                self.view.notify_invalid_choice()                
         else:
-            new_player_id = self.add_object_to_database("players", Player(*new_player_info))
-            # new_player_id = get_database_table("players").all()[-1].doc_id
-            print(f'---\n{new_player_info[0]} {new_player_info[1]} succesfully added with id {new_player_id}.')
+            self.add_player_to_database(new_player_info)
+            PlayerHomeController()            
+            
 
-
-    def add_object_to_database(table_name, serialized_object):
-        """Add an new object to the database.
+    def add_player_to_database(self, new_player_info):
+        """Add a player to the database.
         
-        return id of the newly added element."""
-        table = get_database_table(table_name)
-        # players_database.append(object) # relique de quand la db était une simple liste 
-        # print(vars(self))
-        table.insert(vars(serialized_object))
-        if VERBOSE:           
-            print(f'    {serialized_object} ajouté.e à la base de données.')
-        return get_database_table("players").all()[-1].doc_id
+        Args:
+            - new player informations (see Player model).
+
+        Returns:
+            - new player id
+        """
+        new_player = Player(*new_player_info)
+        new_player_id = add_object_to_database("players", new_player)
+        # new_player_id = get_database_table("players").all()[-1].doc_id
+        print(f'---\n{new_player_info[0]} {new_player_info[1]} succesfully added with id {new_player_id}.')
+        return new_player_id
 
     def update_player_infos(player_id="", first_name="", last_name="", gender="", birth_date="", ranking=""):
         """Update a player in the database."""
@@ -149,7 +147,6 @@ class PlayerHomeController:
             elif next_action == 2:
                 updated_field = "last_name"
                 updated_info = input("Veuillez entrer le nouveau nom : ")
-                # existing_player["last_name"] = updated_info
             elif next_action == 3:
                 updated_info = input("Veuillez entrer le nouveau genre : ")
                 existing_player["gender"] = updated_info
@@ -187,44 +184,56 @@ class TournamentHubController:
 
     def __init__(self):
         self.view = views.TournamentHomeView()
+        self.current_tournament = None
+        # TODO faire en sorte que le current_tournament change après l'ajout d'un tournoi
 
     def run(self):
-        self.view.render()
+        self.view.render(current_tournament = self.current_tournament)
         next_action = self.view.get_user_choice()
         if next_action == "1":
-            return NewTournamentController()
+            self.get_new_tournament_info()
+            return TournamentHubController()
         elif next_action == "2":
-            return AddPlayerToTournamentController()
+            self.view.get_user_tournament_choice()
+            return TournamentHubController()
         elif next_action == "3":
-            pass
+            player_id = self.get_player_by_id()
+            self.add_player_to_tournament()
+            return TournamentHubController()
         elif next_action == "4":
+            pass
+        elif next_action == "5":
             pass
         elif next_action == "0":
             return HomeController()
-        elif next_action == "Q":
+        elif next_action == "9":
             return EndController()
         else:
             self.view.notify_invalid_choice()
             return PlayerHomeController()
 
+    def get_new_tournament_info(self):
+        # TODO for argument in signature(Tournament): ? 
+        name = self.view.get_name()
+        location = self.view.get_location()
+        date = self.view.get_date()
+        time_control = self.view.get_time_control()
+        description = self.view.get_description()
+        new_tournament_info = [name, location, date, [], [], time_control, description]
+        self.add_new_tournament_to_database(new_tournament_info)
 
-class NewTournamentController:
+    def add_new_tournament_to_database(self, new_tournament_info):
+        new_tournament = Tournament(*new_tournament_info)
+        new_tournament_id = add_object_to_database("tournaments", new_tournament)
+        # new_player_id = get_database_table("players").all()[-1].doc_id
+        print(f'---\n{new_tournament_info[0]} succesfully added with id {new_tournament_id}.')
+        self.current_tournament = new_tournament_info[0]
+        return new_tournament_id
 
-    def __init__(self):
-        self.view = views.NewTournamentView()
-    
-    def run(self):
-        self.view.render()
-        next_action = self.view.get_user_choice()
-        if next_action == "Q":
-            return EndController()
+    def select_current_tournament(self):
+        self.current_tournament = "Juste un autre tournoi."
 
-class AddPlayerToTournamentController:
-
-    def __init__(self):
-        self.view = ""
-    
-    def run(self):
+    def add_player_to_tournament():
         """ Add a player to tournament, using their id. """
 
         tournament_id = int(self.view.get_user_tournament_choice())
@@ -316,6 +325,18 @@ class EndController:
             self.view.notify_invalid_choice()
             return EndController()
 
+
+def add_object_to_database(table_name, serialized_object):
+    """Add an new object to the database.
+    
+    return id of the newly added element."""
+    table = get_database_table(table_name)
+    # players_database.append(object) # relique de quand la db était une simple liste 
+    # print(vars(self))
+    table.insert(vars(serialized_object))
+    if VERBOSE:           
+        print(f'    {serialized_object} ajouté.e à la base de données.')
+    return table.all()[-1].doc_id
 
 # FUNCTIONS TO REWORK
 def get_db_object(table, object_id, serialized = True):
