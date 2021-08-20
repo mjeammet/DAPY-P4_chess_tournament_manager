@@ -77,30 +77,24 @@ class PlayerHomeController:
         last_name = self.view.get_last_name()
         gender = self.view.get_gender()
         birth_date = self.view.get_birth_date()
-        ranking = self.view.get_ranking()
-        new_player_info = [first_name, last_name, birth_date, gender, ranking]
+        try:
+            ranking = int(self.view.get_ranking())
+        except: 
+            print("Veuillez entrer un entier positif.\n")
+            ranking = self.view.get_ranking()
+        new_player_info = [first_name, last_name, gender, birth_date, ranking]
 
         # TODO check if player is already in the database
         # TODO transformer en une une fonction search_player() qui servira aussi à aller update les infos du player
         existing_homonyme = get_database_table("players").search((Query().first_name == first_name) & (Query().last_name == last_name))
         if existing_homonyme != []:
-            print(existing_homonyme)
-            print(
-                "Vous avez ajouté un.e :\n"
-                f"      {first_name} {last_name}, né.e le {birth_date} et classé {ranking}.\n"
-                "La base de données contient déjà un homonyme:\n"
-                f"      {first_name} {last_name}, né.e le {existing_homonyme[0]['birth_date']} et classé {existing_homonyme[0]['ranking']}.\n"
-                "Que souhaitez-vous faire ?\n"
-                "1. Ecraser le joueur existant avec les nouvelles données.\n"
-                "2. Ajouter quand même un nouveau joueur.\n"
-                "3. Annuler l'ajout.\n"            
-            )
+            self.view.print_homonyme(new_player_info, existing_homonyme)
             next_action = self.view.get_user_choice()
             if next_action == '1':
                 self.update_player_infos()                
                 pass
             elif next_action == "2":
-                Player(*new_player_info).save()
+                self.add_object_to_db(Player(*new_player_info))
                 return PlayerHomeController()
             elif next_action == "3":
                 return PlayerHomeController()
@@ -108,9 +102,23 @@ class PlayerHomeController:
                 self.view.notify_invalid_choice()
                 print("Ajout annulé.\n")
                 return PlayerHomeController()
+        else:
+            new_player_id = self.add_object_to_database("players", Player(*new_player_info))
+            # new_player_id = get_database_table("players").all()[-1].doc_id
+            print(f'---\n{new_player_info[0]} {new_player_info[1]} succesfully added with id {new_player_id}.')
 
-        new_player_id = get_database_table("players").all()[-1].doc_id
-        print(f'---\n{new_player_info[0]} {new_player_info[1]} succesfully added with id {new_player_id}.')
+
+    def add_object_to_database(table_name, serialized_object):
+        """Add an new object to the database.
+        
+        return id of the newly added element."""
+        table = get_database_table(table_name)
+        # players_database.append(object) # relique de quand la db était une simple liste 
+        # print(vars(self))
+        table.insert(vars(serialized_object))
+        if VERBOSE:           
+            print(f'    {serialized_object} ajouté.e à la base de données.')
+        return get_database_table("players").all()[-1].doc_id
 
     def update_player_infos(player_id="", first_name="", last_name="", gender="", birth_date="", ranking=""):
         """Update a player in the database."""
@@ -136,22 +144,25 @@ class PlayerHomeController:
             next_action = int(input("Quel champ souhaitez-vous modifier ? "))
             print(f"L'entrée actuelle est : {existing_player['first_name']}")            
             if next_action == 1:
+                updated_field = "first_name"
                 updated_info = input("Veuillez entrer le nouveau prénom : ")
-                get_database_table("players").update({'first_name': updated_info}, where('doc_id') == player_id)
-                # existing_player["first_name"] : updated_info
-            if next_action == 2:
+            elif next_action == 2:
+                updated_field = "last_name"
                 updated_info = input("Veuillez entrer le nouveau nom : ")
-                existing_player["last_name"] = updated_info
-            if next_action == 3:
+                # existing_player["last_name"] = updated_info
+            elif next_action == 3:
                 updated_info = input("Veuillez entrer le nouveau genre : ")
                 existing_player["gender"] = updated_info
-            if next_action == 4: 
+            elif next_action == 4: 
                 updated_info = input("Veuillez entrer la nouvelle date de naissance : ")
                 existing_player["birth_date"] = updated_info
-            if next_action == 5:
+            elif next_action == 5:
                 updated_info = input("Veuillez entrer le nouveau classement : ")
                 existing_player["ranking"] = updated_info
-
+            else:
+                print("Stop trolling please.")
+                return PlayerHomeController()
+            get_database_table("players").update({updated_field: updated_info}, doc_ids = [player_id])
 
     # @wrap()
     # def validate_data(self):
@@ -171,26 +182,6 @@ class PlayerHomeController:
         #     while len(wanted_data) < 2 or wanted_data=="":
         #         print("Le prénom ne peut pas être un champ vide ou un chiffre.\n")
         #         wanted_data = self.view.get_first_name()
-
-
-class NewPlayerController:
-    """Controller for the new player menu."""
-
-    def __init__(self):
-        self.view = views.NewPlayerView()
-    
-    def run(self):
-        self.view.render()
-        next_action = self.view.get_user_choice()
-        if next_action == "1":
-            return NewPlayerController()
-        elif next_action == "2":
-            return HomeController()
-        elif next_action == "Q":
-            return EndController()
-        else:
-            self.view.notify_invalid_choice()
-            return NewPlayerController()      
 
 class TournamentHubController:
 
@@ -277,9 +268,11 @@ class ReportMenuController:
             # lists all players in database
             player_list = get_database_table("players").all()
             self.view.print_players(player_list)
+            return ReportMenuController()
         elif next_action == "2":
             tournaments_list = get_database_table("tournaments").all()
             self.view.print_tournaments(tournaments_list)
+            return ReportMenuController()
         elif next_action == "3":
             # gets desired tournament and its players, deserialized
             tournament_id = int(self.view.get_user_tournament_choice())
@@ -290,11 +283,13 @@ class ReportMenuController:
             players_list = [ player for player in get_database_table("players").all() if player.doc_id in tournament_players_list ]
 
             self.view.print_players(players_list)
-            # self.view.print_players()            
+            # self.view.print_players()
+            return ReportMenuController()    
         elif next_action == "4":
             tournament_id = int(self.view.get_user_tournament_choice())
             tournament = get_db_object("tournaments", tournament_id, serialized=False)
             print(tournament.rounds)
+            return ReportMenuController()
         elif next_action == "0":
             return HomeController()
         elif next_action == "Q":

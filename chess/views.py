@@ -69,10 +69,26 @@ class PlayerHomeView(BaseView):
         return input("Genre ('F','M','X'\) :")
     
     def get_birth_date(self):
-        input('Année de naissance (format DD-MM-YYYY) :')
+        return input('Année de naissance (format DD-MM-YYYY) :')
 
     def get_ranking(self):
-        input('Classement (if any, leave blank sinon) :')
+        return input('Classement (entier positif) :')
+
+    def print_homonyme(self, inputted_data, homonymes_list):
+        print(
+            "Vous souhaitez ajouter:\n"
+            f"      {inputted_data[0]} {inputted_data[1]}, né.e le {inputted_data[2]} et classé {inputted_data[3]}.\n"
+            "La base de données contient déjà une ou des entrées similaires:"
+        )
+        for homonyme in homonymes_list:
+            print(f"      {homonyme['first_name']} {homonyme['last_name']}, né.e le {homonyme['birth_date']} et classé {homonyme['ranking']}.\n")
+        print(
+            "Que souhaitez-vous faire ?\n"
+            "1. Ecraser le joueur existant avec les nouvelles données.\n"
+            "2. Ajouter quand même un nouveau joueur.\n"
+            "3. Annuler l'ajout.\n"            
+        )
+
 
 class TournamentHomeView(BaseView):
 
