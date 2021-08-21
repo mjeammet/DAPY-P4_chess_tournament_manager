@@ -1,10 +1,9 @@
+from tinydb import Query 
 from chess.models import Tournament
-from chess.database import get_database_table
-from settings import DATABASE_PATH, VERBOSE, PLAYERS_PER_TOURNAMENT
+from chess.models import get_database_table, empty_database_table
 from chess.models import Player, Tournament
-from chess import database
 from chess import views
-from tinydb import Query, where 
+from settings import DATABASE_PATH, VERBOSE, PLAYERS_PER_TOURNAMENT
 
 # recup les scores de cette manière si les un-tupler dans la méthode "sort_players" ne me satisfait pas
 # then again, cette solution ne me satisfait pas non plus
@@ -31,7 +30,7 @@ class HomeController:
         self.view = views.HomeViewFromExampe()
 
     def run(self):
-        # self.view.print_header("MENU PRINCIPAL")
+        self.view.print_header("MENU PRINCIPAL")
         self.view.render()
         next_action = self.view.get_user_choice()
         if next_action == '1':
@@ -40,7 +39,7 @@ class HomeController:
             return TournamentHubController()
         elif next_action == "3":
             return ReportMenuController()
-        elif next_action == "Q":
+        elif next_action == "9":
             return EndController()
         else:
             self.view.notify_invalid_choice()
@@ -53,6 +52,7 @@ class PlayerHomeController:
         self.view = views.PlayerHomeView()
 
     def run(self):
+        self.view.print_header(title = "MENU DES JOUEURS")
         self.view.render()
         next_action = self.view.get_user_choice()
         if next_action == '1':
@@ -63,7 +63,7 @@ class PlayerHomeController:
             return PlayerHomeController()
         elif next_action == "0":
             return HomeController()
-        elif next_action == "Q":
+        elif next_action == "9":
             return EndController()
         else:
             self.view.notify_invalid_choice()
@@ -184,17 +184,28 @@ class TournamentHubController:
 
     def __init__(self):
         self.view = views.TournamentHomeView()
-        self.current_tournament = None
-        # TODO faire en sorte que le current_tournament change après l'ajout d'un tournoi
 
     def run(self):
-        self.view.render(current_tournament = self.current_tournament)
+        # TODO utiliser une fonction header de baseview en passant le titre ? 
+        # TODO pour ce contrôleur seulement, passer par une fonction dédiée pour afficher le "current_controller"
+        self.view.print_header("MENU DES TOURNOIS")
+        try:
+            tournament_id = int(self.current_tournament_id)
+            current_tournament_name = get_db_object("tournaments", tournament_id, serialized=True)["name"]
+            self.view.print_current_tournament(current_tournament_name)
+            print('did it work ?')
+        except AttributeError: 
+            # print(self.current_tournament_id)
+            self.view.print_current_tournament("None")
+
+        self.view.render()
         next_action = self.view.get_user_choice()
         if next_action == "1":
             self.get_new_tournament_info()
             return TournamentHubController()
         elif next_action == "2":
-            self.view.get_user_tournament_choice()
+            self.current_tournament_id = int(self.view.get_user_tournament_choice())
+            print(self.current_tournament_id)
             return TournamentHubController()
         elif next_action == "3":
             player_id = self.get_player_by_id()
@@ -227,11 +238,12 @@ class TournamentHubController:
         new_tournament_id = add_object_to_database("tournaments", new_tournament)
         # new_player_id = get_database_table("players").all()[-1].doc_id
         print(f'---\n{new_tournament_info[0]} succesfully added with id {new_tournament_id}.')
-        self.current_tournament = new_tournament_info[0]
+        self.current_tournament_id = new_tournament_id
+        # TODO faire en sorte que le current_tournament change après l'ajout d'un tournoi
         return new_tournament_id
 
     def select_current_tournament(self):
-        self.current_tournament = "Juste un autre tournoi."
+        self.current_tournament_id = "Juste un autre tournoi."
 
     def add_player_to_tournament():
         """ Add a player to tournament, using their id. """
@@ -271,6 +283,7 @@ class ReportMenuController:
         self.view = views.ReportMenu()  
 
     def run(self):
+        self.view.print_header(title = "MENU DES RAPPORTS")
         self.view.render()
         next_action = self.view.get_user_choice()
         if next_action == "1":
@@ -349,12 +362,12 @@ def get_db_object(table, object_id, serialized = True):
         object = unserialize_object(serialized_object, table)
         return object
 
-def unserialize_object(serialized_object, table):
-    if table.lower() == "players":
+def unserialize_object(serialized_object, type):
+    if type.lower() == "players":
         object = Player(*serialized_object.values())
-    elif table.lower() == "tournaments":
-        object = Player(*serialized_object.values())
+    elif type.lower() == "tournaments":
+        object = Tournament(*serialized_object.values())
     else:
-        error = f"Provided table '{table}'' is not a valid database table."
+        error = f"Provided type '{type}'' is not a valid database table."
         raise error
     return object

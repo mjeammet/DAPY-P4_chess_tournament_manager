@@ -1,7 +1,14 @@
-from settings import VERBOSE, PLAYERS_PER_TOURNAMENT, ROUNDS_PER_TOURNAMENT
-from chess.models.round import Round
-from chess.database import get_database_table
+from datetime import datetime
 from tinydb import Query
+from .database import get_database_table
+from settings import VERBOSE, PLAYERS_PER_TOURNAMENT, ROUNDS_PER_TOURNAMENT
+
+
+TIME_CONTROL_TYPE = (
+    "bullet"
+    "blitz"
+    "fast"
+)
 
 class Tournament:
     """Un tournoi
@@ -115,3 +122,66 @@ class Tournament:
             self.rounds.append(this_round)
 
             return self.rounds[-1]
+
+class Match(tuple):
+    def __init__(self, duet):
+        pass    
+    
+    def update_results(self, result_player1, result_player2):
+        """ Updates results of a match. """
+
+        if (result_player1,result_player2) == (None, None):
+            print('Please input results')
+        else:
+            self[0][1] += result_player1
+            self[1][1] += result_player2
+    
+    # def __str__(self):
+    #     """Prints opponents """
+    #     player1 = get_player_object(self[0][0])
+    #     player2 = get_player_object(self[1][0])
+    #     # TODO add "round_number x index" pour avoir Match numéro X opposant player1 et player2
+    #     return f'    Match opposant {player1} (cl. {player1.ranking}) et {player2} (cl. {player2.ranking}).'
+
+
+class Round(list):
+    """ Un tour de jeu. """
+
+    def __init__(self, turn_name, players_and_scores_list): 
+        self.name = turn_name
+        self.start_datetime = str(datetime.today())
+        self.is_finished = False
+        self.end_datetime = 0
+        self.matchs = self.generate_pairs(players_and_scores_list)
+
+    def mark_as_finished(self):
+        """Mark round as finished, sets endtime and calls for an update of match results."""
+        self.end_datetime = str(datetime.today())
+        self.is_finished = True
+
+        for match in self.matchs:
+            match.update_results(1,0)
+
+        return True
+
+    def generate_pairs(self, players_and_scores_list):
+        """Generates pairs of players for the next round
+        
+        Args:
+            - score_list : A list of lists containing players and scores """
+        list_of_matchs = []
+        half = int(PLAYERS_PER_TOURNAMENT/2)
+        
+        if len(players_and_scores_list) == PLAYERS_PER_TOURNAMENT:
+            # Dividing players in two halves
+            highest_half = players_and_scores_list[:half]
+            lowest_half = players_and_scores_list[half:]
+            
+            for position in range(len(highest_half)):
+                match = Match(([highest_half[position], lowest_half[position]]))
+                list_of_matchs.append(match)
+                
+        return list_of_matchs
+
+    def __repr__(self):
+        return str(self.matchs)

@@ -19,26 +19,25 @@ class BaseView():
 
     def get_user_tournament_choice(self):
         return input('\nVeuillez entrer l\'id d\'un tournoi existant ? ')
+        
 
-def print_header(title):
-    print(
-        "\n|========================================|\n"
-        f"|\t\t{title}\t\t|\n"
-        "|========================================|"
-    )
+    def print_header(self, title):
+        print(
+            "\n|========================================|\n"
+            f"|\t\t{title}\t\t|\n"
+            "|========================================|"
+        )
     
 class HomeViewFromExampe(BaseView):
     """View of the main menu."""
 
     @staticmethod
     def render():
-        print_header(title = "MENU PRINCIPAL")
         print(
             "1. Gestion des joueurs.\n"
             "2. Gestion des tournois.\n"
             "3. Impression des rapports.\n"
-            "4. Vider base de données\n"
-            "\nQ. Quitter le programme.\n"
+            "9. Quitter le programme.\n"
         )
 
     def print_welcome(self):
@@ -51,12 +50,11 @@ class PlayerHomeView(BaseView):
 
     @staticmethod
     def render():
-        print_header(title = "MENU DES JOUEURS")
         print(
             "1. Ajouter un joueur à la base de données.\n"
             "2. Mettre à jour les données d'un joueur.\n"
             "0. Retour au menu principal.\n"
-            "\nQ. Quitter le programme.\n"
+            "9. Quitter le programme.\n"
         )
 
     def get_first_name(self):
@@ -96,9 +94,7 @@ class PlayerHomeView(BaseView):
 class TournamentHomeView(BaseView):
 
     @staticmethod
-    def render(current_tournament):
-        print_header(title = "MENU DES TOURNOIS")
-        print(f'Current tournament : {current_tournament}')
+    def render(current_tournament = None):
         print(
             "\n"
             "1. Créer un nouveau tournoi.\n"
@@ -109,6 +105,9 @@ class TournamentHomeView(BaseView):
             "0. Retour au menu principal.\n"
             "9. Quitter le programme.\n"
         ) 
+
+    def print_current_tournament(self, tournament_name):
+        print(f'Current tournament : {tournament_name}')
 
     def get_name(self):
         return input("Nom du tournoi : ")
@@ -129,15 +128,14 @@ class ReportMenu(BaseView):
 
     @staticmethod
     def render():
-        print_header(title = "MENU DES RAPPORTS")
         print(
             "1. Liste de tous les acteurs.\n"            
             "2. Liste de tous les tournois.\n"
             "3. Liste de tous les joueurs d'un tournoi.\n"
             "4. Liste de tous les tours d'un tournoi.\n"
             "5. Liste de tous les matchs d'un tournoi.\n"
-            "\n0. Retour au menu principal.\n"
-            "Q. Quitter le programme.\n"
+            "0. Retour au menu principal.\n"
+            "9. Quitter le programme.\n"
         )
 
     @staticmethod

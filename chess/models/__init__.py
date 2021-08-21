@@ -1,6 +1,3 @@
 from .players import Player
-from .tournament import Tournament, PLAYERS_PER_TOURNAMENT
-from .round import Round
-from .match import Match
-
-# PLAYERS_PER_TOURNAMENT = 8
+from .tournament import Tournament, Round, Match
+from .database import Database, get_database_table, empty_database_table
