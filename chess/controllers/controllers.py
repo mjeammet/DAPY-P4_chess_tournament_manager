@@ -27,16 +27,17 @@ class ApplicationController:
 class HomeController:
     
     def __init__(self):
-        self.view = views.HomeViewFromExampe()
+        self.title = "MENU PRINCIPAL"
+        self.view = views.HomeViewFromExampe()        
 
     def run(self):
-        self.view.print_header("MENU PRINCIPAL")
+        self.view.print_header(self.title)
         self.view.render()
         next_action = self.view.get_user_choice()
         if next_action == '1':
             return PlayerHomeController()
         elif next_action == "2":
-            return TournamentHubController()
+            return TournamentHubController(current_controller_id = None)
         elif next_action == "3":
             return ReportMenuController()
         elif next_action == "9":
@@ -49,10 +50,11 @@ class HomeController:
 class PlayerHomeController:
 
     def __init__(self):
+        self.title = "MENU DES JOUEURS"
         self.view = views.PlayerHomeView()
 
     def run(self):
-        self.view.print_header(title = "MENU DES JOUEURS")
+        self.view.print_header(self.title)
         self.view.render()
         next_action = self.view.get_user_choice()
         if next_action == '1':
@@ -182,31 +184,34 @@ class PlayerHomeController:
 
 class TournamentHubController:
 
-    def __init__(self):
+    def __init__(self, current_controller_id):
+        self.title = "MENU DES TOURNOIS"
         self.view = views.TournamentHomeView()
+        self.current_tournament_id = current_controller_id
 
     def run(self):
         # TODO utiliser une fonction header de baseview en passant le titre ? 
         # TODO pour ce contrôleur seulement, passer par une fonction dédiée pour afficher le "current_controller"
-        self.view.print_header("MENU DES TOURNOIS")
+        self.view.print_header(self.title)
         try:
+            tournament_id = int(self.current_tournament_id)
+        # except AttributeError: 
+        #     self.view.print_current_tournament("None")
+        except: 
+            self.view.print_current_tournament("None")
+        else: 
             tournament_id = int(self.current_tournament_id)
             current_tournament_name = get_db_object("tournaments", tournament_id, serialized=True)["name"]
             self.view.print_current_tournament(current_tournament_name)
-            print('did it work ?')
-        except AttributeError: 
-            # print(self.current_tournament_id)
-            self.view.print_current_tournament("None")
 
         self.view.render()
         next_action = self.view.get_user_choice()
         if next_action == "1":
-            self.get_new_tournament_info()
-            return TournamentHubController()
+            new_tournament_id = self.get_new_tournament_info()
+            return TournamentHubController(new_tournament_id)
         elif next_action == "2":
-            self.current_tournament_id = int(self.view.get_user_tournament_choice())
-            print(self.current_tournament_id)
-            return TournamentHubController()
+            selected_tournament_id = int(self.view.get_user_tournament_choice())
+            return TournamentHubController(selected_tournament_id)
         elif next_action == "3":
             player_id = self.get_player_by_id()
             self.add_player_to_tournament()
@@ -223,7 +228,14 @@ class TournamentHubController:
             self.view.notify_invalid_choice()
             return PlayerHomeController()
 
-    def get_new_tournament_info(self):
+    def get_new_tournament_info(self) -> int:
+        """Get all infos for new tournament.
+        
+        Args:
+            (none)
+            
+        Returns: 
+            - database id of the new tournament"""
         # TODO for argument in signature(Tournament): ? 
         name = self.view.get_name()
         location = self.view.get_location()
@@ -231,9 +243,18 @@ class TournamentHubController:
         time_control = self.view.get_time_control()
         description = self.view.get_description()
         new_tournament_info = [name, location, date, [], [], time_control, description]
-        self.add_new_tournament_to_database(new_tournament_info)
+        return self.add_new_tournament_to_database(new_tournament_info)
+        
 
     def add_new_tournament_to_database(self, new_tournament_info):
+        """Add a new tournament to the database.
+        Probably to move in database model.
+        
+        Args:
+            - Informations of new tournament
+    
+        Returns:
+            - database id of the new tournament"""
         new_tournament = Tournament(*new_tournament_info)
         new_tournament_id = add_object_to_database("tournaments", new_tournament)
         # new_player_id = get_database_table("players").all()[-1].doc_id
@@ -287,10 +308,7 @@ class ReportMenuController:
         self.view.render()
         next_action = self.view.get_user_choice()
         if next_action == "1":
-            # lists all players in database
-            player_list = get_database_table("players").all()
-            self.view.print_players(player_list)
-            return ReportMenuController()
+            return self.list_database_players()
         elif next_action == "2":
             tournaments_list = get_database_table("tournaments").all()
             self.view.print_tournaments(tournaments_list)
@@ -320,6 +338,11 @@ class ReportMenuController:
             self.view.notify_invalid_choice()
             return ReportMenuController()
 
+    def list_database_players(self):
+        # lists all players in database
+        player_list = get_database_table("players").all()
+        self.view.print_players(player_list)
+        return ReportMenuController()
 
 class EndController:
     """Controller handling app closure."""
