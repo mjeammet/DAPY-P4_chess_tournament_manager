@@ -27,7 +27,13 @@ class BaseView():
             f"|\t\t{title}\t\t|\n"
             "|========================================|"
         )
-    
+
+    def print_info(self, info_text):
+        print(info_text)
+
+    def press_any_key(self):
+        input("Presser n'importe quelle touche pour retourner à la selection.")
+
 class HomeViewFromExampe(BaseView):
     """View of the main menu."""
 
@@ -78,11 +84,11 @@ class PlayerHomeView(BaseView):
     def print_homonyme(self, inputted_data, homonymes_list):
         print(
             "Vous souhaitez ajouter:\n"
-            f"      {inputted_data[0]} {inputted_data[1]}, né.e le {inputted_data[2]} et classé {inputted_data[3]}.\n"
+            f"      {inputted_data[0]} {inputted_data[1]} ({inputted_data[2]}), né.e le {inputted_data[3]} et classé {inputted_data[4]}.\n"
             "La base de données contient déjà une ou des entrées similaires:"
         )
         for homonyme in homonymes_list:
-            print(f"      {homonyme['first_name']} {homonyme['last_name']}, né.e le {homonyme['birth_date']} et classé {homonyme['ranking']}.\n")
+            print(f"      {homonyme['first_name']} {homonyme['last_name']} ({homonyme['gender']}), né.e le {homonyme['birth_date']} et classé {homonyme['ranking']}.\n")
         print(
             "Que souhaitez-vous faire ?\n"
             "1. Ecraser le joueur existant avec les nouvelles données.\n"

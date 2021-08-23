@@ -1,13 +1,15 @@
 from tinydb import Query 
 from chess.models import Tournament
-from chess.models import get_database_table, empty_database_table
-from chess.models import Player, Tournament
+from chess.models import get_database_table, Database
+from chess.models import Player, Tournament, Round, Match
 from chess import views
-from settings import DATABASE_PATH, VERBOSE, PLAYERS_PER_TOURNAMENT
+from settings import VERBOSE, PLAYERS_PER_TOURNAMENT, ROUNDS_PER_TOURNAMENT
 
 # recup les scores de cette manière si les un-tupler dans la méthode "sort_players" ne me satisfait pas
 # then again, cette solution ne me satisfait pas non plus
 # def get_scores(players_list, tournament):
+
+# TODO tournamenthubcontroller > turn self.current_controller_id into the object tournament
 
 class ApplicationController:
     """The app itself. Prints welcome."""
@@ -37,7 +39,7 @@ class HomeController:
         if next_action == '1':
             return PlayerHomeController()
         elif next_action == "2":
-            return TournamentHubController(current_controller_id = None)
+            return TournamentHubController(current_tournament = None)
         elif next_action == "3":
             return ReportMenuController()
         elif next_action == "9":
@@ -52,6 +54,7 @@ class PlayerHomeController:
     def __init__(self):
         self.title = "MENU DES JOUEURS"
         self.view = views.PlayerHomeView()
+        self.database = Database()
 
     def run(self):
         self.view.print_header(self.title)
@@ -88,7 +91,7 @@ class PlayerHomeController:
 
         # TODO check if player is already in the database
         # TODO transformer en une une fonction search_player() qui servira aussi à aller update les infos du player
-        existing_homonyme = get_database_table("players").search((Query().first_name == first_name) & (Query().last_name == last_name))
+        existing_homonyme = self.database.players_table.search((Query().first_name == first_name) & (Query().last_name == last_name))
         if existing_homonyme != []:
             self.view.print_homonyme(new_player_info, existing_homonyme)
             next_action = self.view.get_user_choice()
@@ -184,39 +187,41 @@ class PlayerHomeController:
 
 class TournamentHubController:
 
-    def __init__(self, current_controller_id):
+    def __init__(self, current_tournament):
         self.title = "MENU DES TOURNOIS"
         self.view = views.TournamentHomeView()
-        self.current_tournament_id = current_controller_id
+        self.current_tournament = current_tournament
+        self.database = Database()
 
     def run(self):
-        # TODO utiliser une fonction header de baseview en passant le titre ? 
-        # TODO pour ce contrôleur seulement, passer par une fonction dédiée pour afficher le "current_controller"
         self.view.print_header(self.title)
-        try:
-            tournament_id = int(self.current_tournament_id)
-        # except AttributeError: 
-        #     self.view.print_current_tournament("None")
-        except: 
-            self.view.print_current_tournament("None")
-        else: 
-            tournament_id = int(self.current_tournament_id)
-            current_tournament_name = get_db_object("tournaments", tournament_id, serialized=True)["name"]
+        if self.current_tournament != None:
+            current_tournament_name = self.current_tournament.name
             self.view.print_current_tournament(current_tournament_name)
-
+        else:
+            self.view.print_current_tournament("None")
         self.view.render()
         next_action = self.view.get_user_choice()
         if next_action == "1":
-            new_tournament_id = self.get_new_tournament_info()
-            return TournamentHubController(new_tournament_id)
-        elif next_action == "2":
-            selected_tournament_id = int(self.view.get_user_tournament_choice())
-            return TournamentHubController(selected_tournament_id)
+            new_tournament_infos = self.get_new_tournament_info()
+            new_tournament = self.add_new_tournament_to_database(new_tournament_infos)
+            return TournamentHubController(current_tournament = new_tournament)
+        elif next_action == "2":            
+            selected_tournament = self.select_current_tournament()
+            print(f"Tournoi {selected_tournament.name} sélectionné comme tournoi en cours.")
+            self.view.press_any_key()
+            return TournamentHubController(current_tournament = selected_tournament)
         elif next_action == "3":
-            player_id = self.get_player_by_id()
+            # selects a new tournament if None is selected
+            if self.current_tournament == None:
+                self.current_tournament = self.select_current_tournament()
             self.add_player_to_tournament()
-            return TournamentHubController()
+            return TournamentHubController(self.current_tournament)
         elif next_action == "4":
+            # selects a new tournament if None is selected
+            if self.current_tournament == None:
+                self.current_tournament = self.select_current_tournament()
+            self.launch_new_round()
             pass
         elif next_action == "5":
             pass
@@ -234,17 +239,14 @@ class TournamentHubController:
         Args:
             (none)
             
-        Returns: 
-            - database id of the new tournament"""
+        Returns a list containing the collected datas"""
         # TODO for argument in signature(Tournament): ? 
         name = self.view.get_name()
         location = self.view.get_location()
         date = self.view.get_date()
         time_control = self.view.get_time_control()
         description = self.view.get_description()
-        new_tournament_info = [name, location, date, [], [], time_control, description]
-        return self.add_new_tournament_to_database(new_tournament_info)
-        
+        return [name, location, date, [], [], time_control, description]        
 
     def add_new_tournament_to_database(self, new_tournament_info):
         """Add a new tournament to the database.
@@ -259,44 +261,144 @@ class TournamentHubController:
         new_tournament_id = add_object_to_database("tournaments", new_tournament)
         # new_player_id = get_database_table("players").all()[-1].doc_id
         print(f'---\n{new_tournament_info[0]} succesfully added with id {new_tournament_id}.')
-        self.current_tournament_id = new_tournament_id
+        self.current_tournament = new_tournament
         # TODO faire en sorte que le current_tournament change après l'ajout d'un tournoi
-        return new_tournament_id
+        return new_tournament
 
     def select_current_tournament(self):
-        self.current_tournament_id = "Juste un autre tournoi."
+        """Prompts user to select new tournament as current tournament.
+        
+        Returns : 
+            - an id 
+            - an tournament object (unserialized)."""        
+        try:
+            inputted_id = int(self.view.get_user_tournament_choice())
+            self.database.tournaments_table.get(doc_id = inputted_id)
+            # assert(get_database_table("tournaments").get(doc_id = inputted_id), [])
+        except ValueError:
+            error = 'Id must be an integer'
+            print(error)
+            return None 
+        finally:
+            serialized_tournament = self.database.tournaments_table.get(doc_id = inputted_id)
+            return unserialize_object(serialized_tournament, type="tournaments")
 
-    def add_player_to_tournament():
+    def add_player_to_tournament(self):
         """ Add a player to tournament, using their id. """
 
-        tournament_id = int(self.view.get_user_tournament_choice())
-        tournament = get_db_object("tournaments", tournament_id, serizalized=False)
-        
         # checks if tournament isn't already full
-        #     if len(self.players) >= PLAYERS_PER_TOURNAMENT:
-        #         print("Le tournoi est déjà plein, vous ne pouvez pas ajouter de participant.es.")
-        #     else:
-        
-        while len(tournament.players) < 8:
-            player_id = input("Which player id ?")    
+        if len(self.current_tournament.players) >= PLAYERS_PER_TOURNAMENT:
+            info = "Le tournoi est déjà plein, vous ne pouvez pas ajouter de participant.es."
+            self.view.print_info(info)
+        else:        
+            player_id = int(input("Id du joueur que vous souhaiter ajouter : "))
+            if player_id in self.current_tournament.players:
+                print("Player already in tournament.")
+                return self.view.press_any_key()
 
-            players_table = get_database_table("players")
-            try:
-                player = get_db_object(player_id)
-            except IndexError:
-                print(f"Unknown player #{id}. Please select a valid player id.")
+            # Making sure que le player est bien dans la DB
+            try: 
+                get_database_table("players").get(doc_id = player_id)
+            # Add except
+            finally: 
+                self.current_tournament.append(player_id)
+                # if VERBOSE: 
+                #     print(f'    {player["first_name"]} ajouté.e au tournoi')
+                self.database.tournaments_table.update({"players": self.current_tournament.players}, Query().name == self.current_tournament.name)
+                
+            # notifies if it was the eighth player
+            if len(self.current_tournament.players) == PLAYERS_PER_TOURNAMENT:
+                print("8 participant.es ajouté.es au tournoi. Le tournoi est désormais plein ! ")
 
+        return self.view.press_any_key()
 
-            if players_table.search(Query().id == player_id) != []:
-                tournament.add_player_to_tournament(player_id)
-                if VERBOSE:
-                    print(f'    {player["first_name"]} ajouté.e au tournoi')
+    def launch_new_round(self):
+        # Get the new turn's number
+        round_number = int(len(self.current_tournament.rounds)+1)
+
+        if round_number >= ROUNDS_PER_TOURNAMENT:
+            print(f"Le nombre de tour par tournoi ne peut pas excéder {ROUNDS_PER_TOURNAMENT} (voir \"settings.py\").")
+            return self.view.press_any_key()
+        else:
+            print(f'Starting round number {round_number}')
+
+            # # sort players
+            if round_number == 1:
+                players_order = self.sort_players(self.current_tournament.players, by = 'ranking')
+            else :
+                players_order = self.sort_players(self.current_tournament.players, by = 'score')
+
+            # matchs = self.generate_pairs(players_order)
+            # self.make_pairs()
+            # upsert a temporary 
+            # checking if we have a duo we already previously had
+            # if it's the case, try and mickmack with someone else
+
+            print(self.current_tournament.players)
+            # round_name = f'Round_{round_number}'
+            # # Add a new round with rank players and their associated scores
+            # this_round = Round(turn_name = round_name, players_and_scores_list = [matchs])
+            # self.current_tournament.rounds.append(this_round)
+
+            # self.database.tournaments_table.update({"rounds": self.current_tournament.rounds}, Query().name == self.current_tournament.name)
+            # return self.current_tournament.rounds[-1]
             
+    def sort_players(self, players_list, by = 'score', tournament_id=None):
+        """ Sorts player to generate pairs according to the swiss tournament pattern. 
+        
+        Args:
+            - a list of players
+            - by -- the parameter by which players will be sorted. Can be 'score' or 'ranking'.
+            - optional, a tournament_id to gather players' score in the database
 
-        # notifies if it was the eighth player
-        if len(tournament.players) == PLAYERS_PER_TOURNAMENT:
-            print("8 participant.es ajouté.es au tournoi. Le tournoi est désormais plein ! ")
+        Returns:
+        - a sorted list of players' ids
+        """
+        # if by == 'score':            
+        #     #        
+        #     # Sorts player by score of previous round
+        #     sorted_players = sorted(players_score, key = lambda x: x[1], reverse=True)
+        #     # print("sorted score = ", sorted_players)
+            
+        #     self.players = [item[0] for item in sorted_players]
+        #     return sorted_players
+        
+        # filters the database to only get this tournament's entrants
+        entrants = []
+        for entrants_id in players_list:
+            entrants.append(self.database.players_table.get(doc_id = entrants_id))    
 
+        if by == 'ranking':
+            return [player.doc_id for player in sorted(entrants, key = lambda x:x['ranking'], reverse=True)]
+        elif by == 'name':
+            return [player.doc_id for player in sorted(entrants, key = lambda x:x['last_name'])]
+        elif by == 'score':
+            # TODO when scores are changed, upsert a score
+            # TODO When tournament is closed, remove field score_tournament{id} 
+            score_field = f'score_tournament_{tournament_id}'
+            return [player.doc_id for player in sorted(entrants, key = lambda x: (x[score_field], x['ranking']))]
+        else:
+            message = (f'Cannot sort by {by}. Please sort by \'score\', \'ranking\' or \'name\' instead.')
+            raise Exception(message)
+
+    def generate_pairs(self, players_and_scores_list):
+        """Generates pairs of players for the next round
+        
+        Args:
+            - score_list : A list of lists containing players and scores """
+        list_of_matchs = []
+        half = int(PLAYERS_PER_TOURNAMENT/2)
+        
+        if len(players_and_scores_list) == PLAYERS_PER_TOURNAMENT:
+            # Dividing players in two halves
+            highest_half = players_and_scores_list[:half]
+            lowest_half = players_and_scores_list[half:]
+            
+            for position in range(len(highest_half)):
+                match = Match(([highest_half[position], lowest_half[position]]))
+                list_of_matchs.append(match)
+                
+        return list_of_matchs
 
 class ReportMenuController:
     
@@ -376,8 +478,13 @@ def add_object_to_database(table_name, serialized_object):
 
 # FUNCTIONS TO REWORK
 def get_db_object(table, object_id, serialized = True):
-    """Selects a tournament, using its id """        
-    serialized_object = get_database_table(table).get(doc_id = object_id)
+    """Selects a tournament, using its id """
+    try:
+        int(object_id)
+    except:
+        error_message = f"{object_id} not an integer. Can't retrieved object in database."
+        print(error_message)
+    serialized_object = get_database_table(table).get(doc_id = int(object_id))
 
     if serialized: 
         return serialized_object

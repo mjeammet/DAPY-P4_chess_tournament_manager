@@ -6,6 +6,8 @@ class Database:
     def __init__(self):
         self.database = TinyDB(DATABASE_PATH)
         self.current_tournament = None
+        self.players_table = self.database.table("players")
+        self.tournaments_table = self.database.table("tournaments")
 
 
 def get_database_table(table_name):

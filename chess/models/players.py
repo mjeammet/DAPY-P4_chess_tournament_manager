@@ -12,6 +12,9 @@ class Player():
     def __str__(self):
         return f'{self.full_name}'
 
+    def __repr__(self):
+        pass
+
     @property
     def full_name(self):
         return f'{self.first_name} {self.last_name}'
