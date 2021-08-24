@@ -5,7 +5,7 @@ class Round:
 
     def __init__(self, turn_name, matchs): 
         self.name = turn_name
-        self.start_time = str(datetime.today())
+        self.start_datetime = str(datetime.today())
         self.end_datetime = None
         self.matchs = matchs
 
@@ -21,7 +21,7 @@ class Round:
 
     def serialize(self):
         composition = vars(self)
-        composition['matchs'] = [str(match_) for match_ in self.matchs]
+        composition['matchs'] = [match_ for match_ in self.matchs]
         return composition
 
     def __str__(self):

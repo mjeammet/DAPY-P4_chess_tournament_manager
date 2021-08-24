@@ -286,7 +286,14 @@ class TournamentMenuController:
             return TournamentMenuController(self.current_tournament)
         elif next_action == "3":
             # Selected "prints rounds"
-            print(self.current_tournament.rounds)
+
+            if self.current_tournament == None:
+                self.current_tournament = self.select_current_tournament()
+
+
+            self.view.print_round_header()
+            for round in self.current_tournament.rounds:
+                self.view.print_round_details(round)
             self.view.press_any_key()
             return TournamentMenuController(self.current_tournament)
         elif next_action == "4":
@@ -294,9 +301,29 @@ class TournamentMenuController:
             if self.current_tournament == None:
                 self.current_tournament = self.select_current_tournament()
             self.launch_new_round()
+
+            serialized_round = [round.serialize() for round in self.current_tournament.rounds]
+            print(f"Updating DB with round {serialized_round}")
+            # update database to include new round 
+            self.database.tournaments_table.update({"rounds": serialized_round}, Query().name == self.current_tournament.name)
+            
             return TournamentMenuController(self.current_tournament)
         elif next_action == "5":
             # Selected "update round"
+
+            if self.current_tournament == None:
+                self.current_tournament = self.select_current_tournament()
+
+            round_to_update = self.current_tournament.rounds[-1]
+            self.view.print_alert(f"Updating {round_to_update.name}")
+
+            print(type(round_to_update))
+            print(round_to_update)
+            updated_results = self.update_round_results(round_to_update)
+            round_to_update.matchs = updated_results
+            print(updated_results[0])
+            
+            # self.database.tournaments_table.update()
             return TournamentMenuController(self.current_tournament)
         elif next_action == "6":
             # List matches
@@ -386,16 +413,10 @@ class TournamentMenuController:
             round_name = f'Round_{round_number}'
             # # Add a new round with rank players and their associated scores
             this_round = Round(round_name, round_matchs)
-            print(f'{this_round.name} créé le {this_round.start_time}.')
+            print(f'{this_round.name} créé le {this_round.start_datetime}.')
             self.current_tournament.rounds.append(this_round)
-    
-            print(this_round.serialize())
 
-            # update database to include new round 
-            # self.database.add_to_database(table_name="tournaments", serialized_object=vars(self.current_tournament))
-            self.database.tournaments_table.update({"rounds": [round.serialize() for round in self.current_tournament.rounds]}, Query().name == self.current_tournament.name)
-            # self.database.tournaments_table.update({"players": self.current_tournament.players}, Query().name == self.current_tournament.name.strip())
-            return self.current_tournament.rounds[-1]
+            return self.current_tournament
             
     def sort_players(self, players_list, by = 'score', tournament_id=None):
         """ Sorts player to generate pairs according to the swiss tournament pattern. 
@@ -462,6 +483,26 @@ class TournamentMenuController:
                 
         return list_of_matchs
     
+    def update_round_results(self, round):
+        print('WIP')
+        # TODO ajouter un except si le round est le premier
+        match_list = []
+        for match in round.matchs:
+            match_list.append(Match(self.update_match_results(match)))
+        return match_list
+
+    def update_match_results(self, match):
+        print(match)
+        p1_id = match[0][0]
+        p2_id = match[1][0]
+        score1 = float(input(f"Score du joueur {p1_id} : "))
+        score2 = float(input(f"Score du joueur {p2_id} : "))
+        if score1 + score2 == 1:
+            new_match = ([p1_id, score1], [p2_id, score2])
+            return new_match
+        else:
+            return None
+
     # def serialize_rounds(self):
     #     db_friendly_round = []
     #     round_num = 0

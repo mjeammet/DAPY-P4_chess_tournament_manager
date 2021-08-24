@@ -147,6 +147,27 @@ class TournamentHomeView(BaseView):
     def print_current_tournament(self, tournament_name):
         print(f'Current tournament : {tournament_name}\n')
 
+    def print_round_header(self):
+        print("Nom\t   Date_debut\t\t\t Date_fin  Match1    Match2  Match3  Match4")
+
+    def print_round_details(self, round):
+        details = (
+            f'{round.name}    '    
+            f'{round.start_datetime}    '
+            f'{round.end_datetime}    '
+            f'{str(round.matchs[0])}    '
+            f'{str(round.matchs[1])}    '
+            f'{str(round.matchs[2])}    '
+            f'{str(round.matchs[3])}    '
+        )
+        print(details)
+        return None
+
+    def print_match_details(self, match):
+        # print(f'{match}')
+        return match
+
+
 class ReportMenu(BaseView):
 
     @staticmethod
