@@ -1,6 +1,10 @@
 class Match(tuple):
     def __init__(self, duet):
         self = duet
+        # self.p1_id = duet[0][0]
+        # self.p1_score = duet[0][1]
+        # self.p2_id = duet[1][0]
+        # self.p2_score = duet[1][1]
         
     def update_results(self, result_player1, result_player2):
         """ Updates results of a match. """
@@ -11,6 +15,10 @@ class Match(tuple):
             self[0][1] += result_player1
             self[1][1] += result_player2
     
+    def serialize(self):
+        print_duet = print(self)
+        return print_duet
+
     # def __str__(self):
     #     """Prints opponents """
     #     player1 = get_player_object(self[0][0])

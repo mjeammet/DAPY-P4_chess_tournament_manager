@@ -131,13 +131,13 @@ class TournamentHomeView(BaseView):
     @staticmethod
     def render(current_tournament = None):
         print(
-            "1. Lister les joueurs d'un tournoi.\n"
-            "2. Ajouter un joueur à un tournoi.\n"
+            "1. Lister les joueurs du tournoi.\n"
+            "2. Ajouter un joueur au tournoi.\n"
             "---\n"
-            "3. Lister les tours d'un tournoi.\n"
-            "4. Ouvrir un round.\n"
+            "3. Lister les tours du tournoi.\n"
+            "4. Commencer un nouveau tour de jeu.\n"
             "5. Entrer les résultats du round non terminé.\n"
-            "6. Lister les matchs d'un tournoi.\n"
+            "6. Lister les matchs du tournoi.\n"
             "---\n"
             "7. Changer de tournoi sélectionné.\n"
             "0. Retour au menu principal.\n"

@@ -25,7 +25,7 @@ class Database:
             return object
 
     
-    def add_object_to_database(self, table_name, serialized_object):
+    def add_to_database(self, table_name, serialized_object):
         """Add an new object to the database.
         
         return id of the newly added element."""

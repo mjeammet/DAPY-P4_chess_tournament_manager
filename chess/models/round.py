@@ -1,6 +1,6 @@
 from datetime import datetime
 
-class Round(list):
+class Round:
     """ Un tour de jeu. """
 
     def __init__(self, turn_name, matchs): 
@@ -18,6 +18,11 @@ class Round(list):
             match.update_results(1,0)
 
         return True
+
+    def serialize(self):
+        composition = vars(self)
+        composition['matchs'] = [str(match_) for match_ in self.matchs]
+        return composition
 
     def __str__(self):
         return str(self.matchs)

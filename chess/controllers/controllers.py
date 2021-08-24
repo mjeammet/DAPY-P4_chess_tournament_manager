@@ -9,7 +9,7 @@ from settings import VERBOSE, PLAYERS_PER_TOURNAMENT, ROUNDS_PER_TOURNAMENT
 # then again, cette solution ne me satisfait pas non plus
 # def get_scores(players_list, tournament):
 
-# TODO tournamenthubcontroller > turn self.current_controller_id into the object tournament
+# TODO TournamentMenuController > turn self.current_controller_id into the object tournament
 
 class ApplicationController:
     """The app itself. Prints welcome."""
@@ -53,9 +53,9 @@ class HomeController:
             new_tournament = self.add_new_tournament_to_database(new_tournament_infos)
             return HomeController()
         elif next_action == "3":
-            return TournamentHubController(current_tournament = None)
+            return TournamentMenuController(current_tournament=None)
         elif next_action == '4':
-            return PlayerHomeController()
+            return PlayerMenuController()
         elif next_action == "9":
             return EndController()
         else:
@@ -87,7 +87,7 @@ class HomeController:
         Returns:
             - database id of the new tournament"""
         new_tournament = Tournament(*new_tournament_info)
-        new_tournament_id = self.database.add_object_to_database("tournaments", new_tournament)
+        new_tournament_id = self.database.add_to_database("tournaments", new_tournament)
         # new_player_id = self.database.players_table.all()[-1].doc_id
         print(f'---\n{new_tournament_info[0]} succesfully added with id {new_tournament_id}.')
         self.view.press_any_key()
@@ -95,7 +95,7 @@ class HomeController:
         # TODO faire en sorte que le current_tournament change après l'ajout d'un tournoi
         return new_tournament
 
-class PlayerHomeController:
+class PlayerMenuController:
 
     def __init__(self):
         self.title = "MENU DES JOUEURS"
@@ -108,20 +108,20 @@ class PlayerHomeController:
         next_action = self.view.get_user_choice()
         if next_action == '1':
             self.list_database_players()
-            return PlayerHomeController()
+            return PlayerMenuController()
         elif next_action == '2':
             self.get_new_player_info()
-            return PlayerHomeController()
+            return PlayerMenuController()
         elif next_action == "3":
             self.update_player_infos()
-            return PlayerHomeController()
+            return PlayerMenuController()
         elif next_action == "0":
             return HomeController()
         elif next_action == "9":
             return EndController()
         else:
             self.view.notify_invalid_choice()
-            return PlayerHomeController()
+            return PlayerMenuController()
 
     def list_database_players(self):
         # lists all players in database
@@ -172,7 +172,7 @@ class PlayerHomeController:
             - new player id
         """
         new_player = Player(*new_player_info)
-        new_player_id = self.database.add_object_to_database("players", new_player)
+        new_player_id = self.database.add_to_database("players", new_player)
         # new_player_id = self.database.players_table.all()[-1].doc_id
         print(f'---\n{new_player_info[0]} {new_player_info[1]} succesfully added with id {new_player_id}.')
         return new_player_id
@@ -221,7 +221,7 @@ class PlayerHomeController:
                 updated_info = input("Veuillez entrer le nouveau classement : ")
             else:
                 print("Stop trolling please.")
-                return PlayerHomeController()
+                return PlayerMenuController()
             self.database.players_table.update({updated_field: updated_info}, doc_ids = [player_id])
 
     # @wrap()
@@ -243,7 +243,7 @@ class PlayerHomeController:
         #         print("Le prénom ne peut pas être un champ vide ou un chiffre.\n")
         #         wanted_data = self.view.get_first_name()
 
-class TournamentHubController:
+class TournamentMenuController:
 
     def __init__(self, current_tournament):
         self.title = "MENU DES TOURNOIS"
@@ -271,43 +271,49 @@ class TournamentHubController:
                 print(player)
 
             self.view.press_any_key()
-            return TournamentHubController(self.current_tournament)
+            return TournamentMenuController(self.current_tournament)
         if next_action == "2":
             # Adds a player to the selected tournament
             
             if self.current_tournament == None:
                 self.current_tournament = self.select_current_tournament()
-            self.add_player_to_tournament()
-            return TournamentHubController(self.current_tournament)
+            
+            if len(self.current_tournament.players) >= PLAYERS_PER_TOURNAMENT:
+                alert = "Le tournoi est déjà plein, vous ne pouvez pas ajouter de participant.es."
+                self.view.print_alert(alert)
+            else:        
+                self.add_player_to_tournament()
+            return TournamentMenuController(self.current_tournament)
         elif next_action == "3":
             # Selected "prints rounds"
             print(self.current_tournament.rounds)
             self.view.press_any_key()
-            return TournamentHubController(self.current_tournament)
+            return TournamentMenuController(self.current_tournament)
         elif next_action == "4":
             # Selected "New round"
             if self.current_tournament == None:
                 self.current_tournament = self.select_current_tournament()
             self.launch_new_round()
+            return TournamentMenuController(self.current_tournament)
         elif next_action == "5":
             # Selected "update round"
-            return TournamentHubController(self.current_tournament)
+            return TournamentMenuController(self.current_tournament)
         elif next_action == "6":
             # List matches
             for round in self.current_tournament.rounds:
                 print(round.matchs)
-            return TournamentHubController(self.current_tournament)
+            return TournamentMenuController(self.current_tournament)
         elif next_action == "7":
             # Change selected tournament
             selected_tournament = self.select_current_tournament()
-            return TournamentHubController(current_tournament = selected_tournament)
+            return TournamentMenuController(current_tournament = selected_tournament)
         elif next_action == "0":
             return HomeController()
         elif next_action == "9":
             return EndController()
         else:
             self.view.notify_invalid_choice()
-            return TournamentHubController(self.current_tournament)
+            return TournamentMenuController(self.current_tournament)
 
     def select_current_tournament(self):
         """Prompts user to select a tournament as current tournament.
@@ -333,37 +339,34 @@ class TournamentHubController:
     def add_player_to_tournament(self):
         """ Add a player to tournament, using their id. """
 
-        # checks if tournament isn't already full
-        if len(self.current_tournament.players) >= PLAYERS_PER_TOURNAMENT:
-            alert = "Le tournoi est déjà plein, vous ne pouvez pas ajouter de participant.es."
-            self.view.print_alert(alert)
-        else:        
-            player_id = int(input("Id du joueur que vous souhaiter ajouter : "))
-            if player_id in self.current_tournament.players:
-                print("Player already in tournament.")
-                return self.view.press_any_key()
+        # checks if tournament isn't already full        
+        player_id = int(input("Id du joueur que vous souhaiter ajouter : "))
+        if player_id in self.current_tournament.players:
+            print("Player already in tournament.")
+            return self.view.press_any_key()
 
-            # Making sure que le player est bien dans la DB
-            try: 
-                self.database.players_table.get(doc_id = player_id)
-            # Add except
-            finally: 
-                self.current_tournament.append(player_id)
-                # if VERBOSE: 
-                #     print(f'    {player["first_name"]} ajouté.e au tournoi')
-                self.database.tournaments_table.update({"players": self.current_tournament.players}, Query().name == self.current_tournament.name)
-                
-            # notifies if it was the eighth player
-            if len(self.current_tournament.players) == PLAYERS_PER_TOURNAMENT:
-                print("8 participant.es ajouté.es au tournoi. Le tournoi est désormais plein ! ")
+        # Making sure que le player est bien dans la DB
+        try: 
+            self.database.players_table.get(doc_id = player_id)
+        # Add except
+        finally: 
+            self.current_tournament.append(player_id)
+            # if VERBOSE: 
+            #     print(f'    {player["first_name"]} ajouté.e au tournoi')
+            self.database.tournaments_table.update({"players": self.current_tournament.players}, Query().name == self.current_tournament.name)
+            
+        # notifies if it was the eighth player
+        if len(self.current_tournament.players) == PLAYERS_PER_TOURNAMENT:
+            print("8 participant.es ajouté.es au tournoi. Le tournoi est désormais plein ! ")
 
     def launch_new_round(self):
         # Get the new turn's number
-        round_number = int(len(self.current_tournament.rounds)+1)
+        round_number = int(len(self.current_tournament.rounds))+1
 
         if round_number >= ROUNDS_PER_TOURNAMENT:
             error_message = f"Le nombre de tour par tournoi ne peut pas excéder {ROUNDS_PER_TOURNAMENT} (voir \"settings.py\")."
-            return self.view.print_alert(error_message)
+            self.view.print_alert(error_message)
+            return None
         else:
             print(f'Starting round number {round_number}')
 
@@ -375,6 +378,7 @@ class TournamentHubController:
 
             # print(players_order)
             round_matchs = self.pair_players(players_order)
+            # TODO find a way to store matches as dictionaries too
             # upsert a temporary 
             # checking if we have a duo we already previously had
             # if it's the case, try and mickmack with someone else
@@ -382,22 +386,16 @@ class TournamentHubController:
             round_name = f'Round_{round_number}'
             # # Add a new round with rank players and their associated scores
             this_round = Round(round_name, round_matchs)
-            print(f'{round_name} created on {this_round.start_time}.')
+            print(f'{this_round.name} créé le {this_round.start_time}.')
             self.current_tournament.rounds.append(this_round)
-            
-            test = [round for round in self.current_tournament.rounds]
-            print(self.current_tournament.rounds)
+    
+            print(this_round.serialize())
 
-            # db_rounds = self.serialize_rounds(self.current_tournament.rounds)
-            # print(db_rounds)
-            # test = db_rounds
-            # test = [match for match in self.current_tournament.rounds.matchs]
-            # print(self.current_tournament.rounds.matches)
             # update database to include new round 
-            self.database.tournaments_table.insert(*vars(self.current_tournament))
-            # self.database.tournaments_table.update({"rounds": test}, Query().name == self.current_tournament.name.strip())
+            # self.database.add_to_database(table_name="tournaments", serialized_object=vars(self.current_tournament))
+            self.database.tournaments_table.update({"rounds": [round.serialize() for round in self.current_tournament.rounds]}, Query().name == self.current_tournament.name)
             # self.database.tournaments_table.update({"players": self.current_tournament.players}, Query().name == self.current_tournament.name.strip())
-            # return self.current_tournament.rounds[-1]
+            return self.current_tournament.rounds[-1]
             
     def sort_players(self, players_list, by = 'score', tournament_id=None):
         """ Sorts player to generate pairs according to the swiss tournament pattern. 
