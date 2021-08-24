@@ -1,7 +1,7 @@
 class Match(tuple):
     def __init__(self, duet):
-        pass
-    
+        self = duet
+        
     def update_results(self, result_player1, result_player2):
         """ Updates results of a match. """
 

@@ -3,12 +3,11 @@ from datetime import datetime
 class Round(list):
     """ Un tour de jeu. """
 
-    def __init__(self, turn_name, players_and_scores_list): 
+    def __init__(self, turn_name, matchs): 
         self.name = turn_name
-        self.start_datetime = str(datetime.today())
-        self.is_finished = False
-        self.end_datetime = 0
-        self.matchs = self.generate_pairs(players_and_scores_list)
+        self.start_time = str(datetime.today())
+        self.end_datetime = None
+        self.matchs = matchs
 
     def mark_as_finished(self):
         """Mark round as finished, sets endtime and calls for an update of match results."""
@@ -20,5 +19,8 @@ class Round(list):
 
         return True
 
-    def __repr__(self):
+    def __str__(self):
         return str(self.matchs)
+
+    def __repr__(self):
+        return self.__str__()

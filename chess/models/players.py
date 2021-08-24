@@ -2,18 +2,18 @@ class Player():
     """Un joueur pour le tournoi."""
     # TODO faire un dictionnaire pour le genre
 
-    def __init__(self, first_name, last_name, birth_date, gender, ranking = 0):
+    def __init__(self, first_name, last_name, birth_date, gender, ranking):
         self.first_name = first_name
         self.last_name = last_name        
         self.birth_date = birth_date
         self.gender = gender
-        self.ranking = ranking
+        self.ranking = ranking if ranking != "" else 0            
 
     def __str__(self):
         return f'{self.full_name}'
 
     def __repr__(self):
-        pass
+        return self.__str__()
 
     @property
     def full_name(self):

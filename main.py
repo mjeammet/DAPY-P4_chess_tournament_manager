@@ -1,6 +1,6 @@
 from chess.controllers.controllers import ApplicationController
 from chess.models import Player, Tournament, Match, Round
-from chess.models import get_database_table, empty_database_table
+from chess.models import Database
 from settings import TEST
 
 
@@ -8,8 +8,6 @@ def main():
     if TEST:
         # empty_database_table("players", force=True)
         # empty_database_table("tournaments", force=True)
-        # players_table = get_database_table("players")
-        # tournament_table = get_database_table("tournaments")
 
         # Player(1, "Marie", "Pupo", "1990", "F", 0).save()
         # Player(2, "Amandine", "Gay", "1984", "F", 5).save()

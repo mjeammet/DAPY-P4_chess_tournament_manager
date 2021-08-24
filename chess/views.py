@@ -28,21 +28,24 @@ class BaseView():
             "|========================================|"
         )
 
-    def print_info(self, info_text):
+    def print_alert(self, info_text):
         print(info_text)
+        self.press_any_key()
 
     def press_any_key(self):
-        input("Presser n'importe quelle touche pour retourner à la selection.")
+        input("Presser 'Entrée' pour retourner à la selection.")
 
-class HomeViewFromExampe(BaseView):
+
+class HomeView(BaseView):
     """View of the main menu."""
 
     @staticmethod
     def render():
         print(
-            "1. Gestion des joueurs.\n"
-            "2. Gestion des tournois.\n"
-            "3. Impression des rapports.\n"
+            "1. Lister les tournois existants.\n"
+            "2. Créer un tournoi.\n"
+            "3. Sélectionner et jouer un tournoi.\n"
+            "4. Gestion des joueurs.\n"
             "9. Quitter le programme.\n"
         )
 
@@ -52,16 +55,43 @@ class HomeViewFromExampe(BaseView):
             "Read README.md."
             )
 
+    # def print_tournaments(self, tournaments_list):
+    #     """Prints all current and past players in db."""
+    #     for tournament in tournaments_list:
+    #         print(tournament)
+
+    def get_name(self):
+        return input("Nom du tournoi : ")
+    
+    def get_location(self):
+        return input("Lieu du tournoi : ")
+    
+    def get_date(self):
+        return input("Date du tournoi : ")
+
+    def get_time_control(self):
+        return input("Type de contrôle du temps (peut être 'bullet', 'blitz' ou 'fast') : ")
+
+    def get_description(self):
+        return input("(optional) Description : ")
+
 class PlayerHomeView(BaseView):
 
     @staticmethod
     def render():
         print(
-            "1. Ajouter un joueur à la base de données.\n"
-            "2. Mettre à jour les données d'un joueur.\n"
+            "1. Lister les joueurs présents dans la base de données.\n"
+            "2. Ajouter un joueur à la base de données.\n"
+            "3. Mettre à jour les données d'un joueur.\n"
             "0. Retour au menu principal.\n"
             "9. Quitter le programme.\n"
         )
+
+    def print_players(self, unserialized_players_list):
+        # print(unserialized_players_list)
+        """Prints all current and past players in db."""
+        for player in unserialized_players_list:
+            print(f'- {player["first_name"]}')
 
     def get_first_name(self):
         return input('Prénom :')
@@ -96,67 +126,37 @@ class PlayerHomeView(BaseView):
             "3. Annuler l'ajout.\n"            
         )
 
-
 class TournamentHomeView(BaseView):
 
     @staticmethod
     def render(current_tournament = None):
         print(
-            "\n"
-            "1. Créer un nouveau tournoi.\n"
-            "2. Sélectionner un tournoi comme le tournoi actuel.\n"
-            "3. Ajouter des joueurs à un tournoi.\n"
+            "1. Lister les joueurs d'un tournoi.\n"
+            "2. Ajouter un joueur à un tournoi.\n"
+            "---\n"
+            "3. Lister les tours d'un tournoi.\n"
             "4. Ouvrir un round.\n"
-            "5. Entrer les résultats d'un round ouvert.\n"
+            "5. Entrer les résultats du round non terminé.\n"
+            "6. Lister les matchs d'un tournoi.\n"
+            "---\n"
+            "7. Changer de tournoi sélectionné.\n"
             "0. Retour au menu principal.\n"
-            "9. Quitter le programme.\n"
+            "9. Quitter le programme."
         ) 
 
     def print_current_tournament(self, tournament_name):
-        print(f'Current tournament : {tournament_name}')
-
-    def get_name(self):
-        return input("Nom du tournoi : ")
-    
-    def get_location(self):
-        return input("Lieu du tournoi : ")
-    
-    def get_date(self):
-        return input("Date du tournoi : ")
-
-    def get_time_control(self):
-        return input("Type de contrôle du temps (peut être 'bullet', 'blitz' ou 'fast') : ")
-
-    def get_description(self):
-        return input("(optional) Description : ")
+        print(f'Current tournament : {tournament_name}\n')
 
 class ReportMenu(BaseView):
 
     @staticmethod
     def render():
-        print(
-            "1. Liste de tous les acteurs.\n"            
+        print(         
             "2. Liste de tous les tournois.\n"
-            "3. Liste de tous les joueurs d'un tournoi.\n"
-            "4. Liste de tous les tours d'un tournoi.\n"
-            "5. Liste de tous les matchs d'un tournoi.\n"
+
             "0. Retour au menu principal.\n"
             "9. Quitter le programme.\n"
         )
-
-    @staticmethod
-    def print_players(unserialized_players_list):
-        # print(unserialized_players_list)
-        """Prints all current and past players in db."""
-        for player in unserialized_players_list:
-            print(f'- {player["first_name"]}')
-
-    @staticmethod
-    def print_tournaments(tournaments_list):
-        """Prints all current and past players in db."""
-        for tournament in tournaments_list:
-            print(tournament)
-
 
 class EndView:
     """Vue responsable de l'affichage de menu de fin d'application."""

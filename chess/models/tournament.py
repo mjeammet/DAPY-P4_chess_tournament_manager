@@ -1,9 +1,3 @@
-from datetime import datetime
-from tinydb import Query
-from .database import get_database_table
-from settings import VERBOSE, PLAYERS_PER_TOURNAMENT, ROUNDS_PER_TOURNAMENT
-
-
 TIME_CONTROL_TYPE = (
     "bullet"
     "blitz"
@@ -22,3 +16,8 @@ class Tournament:
         self.players = players
         self.time_control = time_control
         self.description = description
+
+    def __str__(self):
+        print(
+            f"{self.name} (Tournament object)\n"
+            f"{self.location}\n")
