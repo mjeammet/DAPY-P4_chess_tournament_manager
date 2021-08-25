@@ -7,7 +7,7 @@ class Player():
         self.last_name = last_name        
         self.birth_date = birth_date
         self.gender = gender
-        self.ranking = ranking if ranking != "" else 0            
+        self.ranking = ranking
 
     def __str__(self):
         return f'{self.full_name}'

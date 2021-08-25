@@ -1,3 +1,4 @@
+from datetime import datetime
 from tinydb import Query 
 from chess.models import Tournament
 from chess.models import Database
@@ -51,7 +52,7 @@ class HomeController:
             # Creation of a new tournament
             new_tournament_infos = self.get_new_tournament_info()
             new_tournament = self.add_new_tournament_to_database(new_tournament_infos)
-            return HomeController()
+            return self.run()
         elif next_action == "3":
             return TournamentMenuController(current_tournament=None)
         elif next_action == '4':
@@ -60,7 +61,7 @@ class HomeController:
             return EndController()
         else:
             self.view.notify_invalid_choice()
-            return HomeController()
+            return self.run()
 
     def get_new_tournament_info(self) -> int:
         """Get all infos for new tournament.
@@ -108,13 +109,13 @@ class PlayerMenuController:
         next_action = self.view.get_user_choice()
         if next_action == '1':
             self.list_database_players()
-            return PlayerMenuController()
+            return self.run()
         elif next_action == '2':
             self.get_new_player_info()
-            return PlayerMenuController()
+            return self.run()
         elif next_action == "3":
             self.update_player_infos()
-            return PlayerMenuController()
+            return self.run()
         elif next_action == "0":
             return HomeController()
         elif next_action == "9":
@@ -137,18 +138,15 @@ class PlayerMenuController:
         last_name = self.view.get_last_name()        
         birth_date = self.view.get_birth_date()
         gender = self.view.get_gender()
-        try:
-            ranking = int(self.view.get_ranking())
-        except: 
-            print("Veuillez entrer un entier positif.\n")
-            ranking = self.view.get_ranking()
+        ranking = self.view.get_ranking()
         new_player_info = [first_name, last_name, birth_date, gender, ranking]
 
         # TODO check if player is already in the database
         # TODO transformer en une une fonction search_player() qui servira aussi à aller update les infos du player
-        existing_homonyme = self.database.players_table.search((Query().first_name == first_name) & (Query().last_name == last_name))
-        if existing_homonyme != []:
-            self.view.print_homonyme(new_player_info, existing_homonyme)
+        
+        existing_duplicate = self.check_existing_homonyme(new_player_info)
+        if existing_duplicate != []:
+            self.view.print_homonyme(new_player_info, existing_duplicate)
             next_action = self.view.get_user_choice()
             if next_action == '1':
                 self.update_player_infos()
@@ -162,6 +160,12 @@ class PlayerMenuController:
             self.add_player_to_database(new_player_info)
             return None            
             
+    def check_existing_homonyme(self, new_player_info):
+        """From inputted player info, check for duplicate in the database."""
+        first_name = new_player_info[0]
+        last_name = new_player_info[1]
+        return self.database.players_table.search((Query().first_name == first_name) & (Query().last_name == last_name))
+    
     def add_player_to_database(self, new_player_info):
         """Add a player to the database.
         
@@ -271,7 +275,7 @@ class TournamentMenuController:
                 print(player)
 
             self.view.press_any_key()
-            return TournamentMenuController(self.current_tournament)
+            return self.run()
         if next_action == "2":
             # Adds a player to the selected tournament
             
@@ -283,7 +287,7 @@ class TournamentMenuController:
                 self.view.print_alert(alert)
             else:        
                 self.add_player_to_tournament()
-            return TournamentMenuController(self.current_tournament)
+            return self.run()
         elif next_action == "3":
             # Selected "prints rounds"
 
@@ -295,19 +299,20 @@ class TournamentMenuController:
             for round in self.current_tournament.rounds:
                 self.view.print_round_details(round)
             self.view.press_any_key()
-            return TournamentMenuController(self.current_tournament)
+            return self.run()
         elif next_action == "4":
             # Selected "New round"
             if self.current_tournament == None:
                 self.current_tournament = self.select_current_tournament()
-            self.launch_new_round()
+            new_round = self.launch_new_round()
 
-            serialized_round = [round.serialize() for round in self.current_tournament.rounds]
-            print(f"Updating DB with round {serialized_round}")
-            # update database to include new round 
-            self.database.tournaments_table.update({"rounds": serialized_round}, Query().name == self.current_tournament.name)
+            # if new_round != None:
+            #     serialized_round = [round.serialize() for round in self.current_tournament.rounds]
+            #     print(f"Updating DB with round {serialized_round}")
+            #     # update database to include new round 
+            #     self.database.tournaments_table.update({"rounds": serialized_round}, Query().name == self.current_tournament.name)
             
-            return TournamentMenuController(self.current_tournament)
+            return self.run()
         elif next_action == "5":
             # Selected "update round"
 
@@ -315,32 +320,30 @@ class TournamentMenuController:
                 self.current_tournament = self.select_current_tournament()
 
             round_to_update = self.current_tournament.rounds[-1]
-            self.view.print_alert(f"Updating {round_to_update.name}")
-
-            print(type(round_to_update))
-            print(round_to_update)
             updated_results = self.update_round_results(round_to_update)
             round_to_update.matchs = updated_results
-            print(updated_results[0])
-            
-            # self.database.tournaments_table.update()
-            return TournamentMenuController(self.current_tournament)
+
+            # self.database.update_round_results(round_to_update)
+            serialized_round = [round.serialize() for round in self.current_tournament.rounds]
+            self.database.tournaments_table.update({"rounds": serialized_round}, Query().name == self.current_tournament.name)     
+            return self.run()
         elif next_action == "6":
             # List matches
             for round in self.current_tournament.rounds:
                 print(round.matchs)
-            return TournamentMenuController(self.current_tournament)
+            return self.run()
         elif next_action == "7":
             # Change selected tournament
             selected_tournament = self.select_current_tournament()
-            return TournamentMenuController(current_tournament = selected_tournament)
+            self.current_tournament = selected_tournament
+            return self.run()
         elif next_action == "0":
             return HomeController()
         elif next_action == "9":
             return EndController()
         else:
             self.view.notify_invalid_choice()
-            return TournamentMenuController(self.current_tournament)
+            return self.run()
 
     def select_current_tournament(self):
         """Prompts user to select a tournament as current tournament.
@@ -350,10 +353,6 @@ class TournamentMenuController:
         try:
             inputted_id = int(self.view.get_user_tournament_choice())
             serialized_tournament = self.database.tournaments_table.get(doc_id = inputted_id)
-            tournament = unserialize_object(serialized_tournament, type="tournaments")
-            name = tournament.name
-            print(f"Tournoi {name} sélectionné comme tournoi en cours.")
-            return tournament
         except ValueError:
             error_message = 'L\'id doit être un entier positif. Tournoi actuel inchangé.'
             self.view.print_alert(error_message)
@@ -362,6 +361,12 @@ class TournamentMenuController:
             error_message = f"Aucun tournoi trouvé sous l'id n°{inputted_id}. Tournoi actuel inchangé."
             self.view.print_alert(error_message)
             return None
+        
+        #unserialize_tournament()
+        tournament = unserialize_object(serialized_tournament, type="tournaments")
+        name = tournament.name
+        print(f"Tournoi {name} sélectionné comme tournoi en cours.")
+        return tournament
         
     def add_player_to_tournament(self):
         """ Add a player to tournament, using their id. """
@@ -403,6 +408,8 @@ class TournamentMenuController:
             else :
                 players_order = self.sort_players(self.current_tournament.players, by = 'score')
 
+            print(players_order)
+            exit()
             # print(players_order)
             round_matchs = self.pair_players(players_order)
             # TODO find a way to store matches as dictionaries too
@@ -411,12 +418,18 @@ class TournamentMenuController:
             # if it's the case, try and mickmack with someone else
 
             round_name = f'Round_{round_number}'
+            round_starttime = str(datetime.today())
+            round_endtime = None
             # # Add a new round with rank players and their associated scores
-            this_round = Round(round_name, round_matchs)
+            
+            this_round = Round(round_name, round_starttime, round_endtime, round_matchs)
             print(f'{this_round.name} créé le {this_round.start_datetime}.')
             self.current_tournament.rounds.append(this_round)
 
-            return self.current_tournament
+            if self.current_tournament != None:
+                return self.current_tournament
+            else:
+                return None
             
     def sort_players(self, players_list, by = 'score', tournament_id=None):
         """ Sorts player to generate pairs according to the swiss tournament pattern. 
@@ -443,18 +456,26 @@ class TournamentMenuController:
         for entrants_id in players_list:
             entrants.append(self.database.players_table.get(doc_id = entrants_id))    
 
-        if by == 'ranking':
-            return [player.doc_id for player in sorted(entrants, key = lambda x:x['ranking'], reverse=True)]
-        elif by == 'name':
-            return [player.doc_id for player in sorted(entrants, key = lambda x:x['last_name'])]
-        elif by == 'score':
-            # TODO when scores are changed, upsert a score
-            # TODO When tournament is closed, remove field score_tournament{id} 
-            score_field = f'score_tournament_{tournament_id}'
-            return [player.doc_id for player in sorted(entrants, key = lambda x: (x[score_field], x['ranking']))]
-        else:
-            message = (f'Cannot sort by {by}. Please sort by \'score\', \'ranking\' or \'name\' instead.')
-            raise Exception(message)
+        try:
+            if by == 'ranking':
+                return [player.doc_id for player in sorted(entrants, key = lambda x:x['ranking'], reverse=True)]
+            elif by == 'name':
+                return [player.doc_id for player in sorted(entrants, key = lambda x:x['last_name'])]
+            elif by == 'score':
+                print(self.current_tournament.serialize())                
+                previous_round = self.current_tournament.rounds[-1]
+                print(previous_round)
+                print(list(previous_round))
+                # TODO when scores are changed, upsert a score
+                # TODO When tournament is closed, remove field score_tournament{id} 
+                score_field = f'score_tournament_{tournament_id}'
+                return [player.doc_id for player in sorted(entrants, key = lambda x: (x[score_field], x['ranking']))]
+            else:
+                message = (f'Cannot sort by {by}. Please sort by \'score\', \'ranking\' or \'name\' instead.')
+                self.view.print_alert(message)
+        except TypeError: 
+            self.view.print_alert("Le classement doit être un entier positif. Veuillez vérifier les données des joueurs.")
+            return TournamentMenuController(self.current_tournament)
 
     def pair_players(self, players_and_scores_list):
         """Generates pairs of players for the next round
@@ -484,7 +505,7 @@ class TournamentMenuController:
         return list_of_matchs
     
     def update_round_results(self, round):
-        print('WIP')
+        # self.view.print_alert(f"Updating {round.name}")
         # TODO ajouter un except si le round est le premier
         match_list = []
         for match in round.matchs:
@@ -502,15 +523,6 @@ class TournamentMenuController:
             return new_match
         else:
             return None
-
-    # def serialize_rounds(self):
-    #     db_friendly_round = []
-    #     round_num = 0
-    #     print(self.current_tournament.rounds)
-    #     for round in self.current_tournament.rounds:            
-    #         for match in self.current_tournament.rounds.matchs:
-    #             print match()
-    #     return 
 
 class EndController:
     """Controller handling app closure."""
@@ -530,12 +542,19 @@ class EndController:
             return EndController()
 
 def unserialize_object(serialized_object, type):
-
     try:
         if type.lower() == "players":
             object = Player(*serialized_object.values())
         elif type.lower() == "tournaments":
             object = Tournament(*serialized_object.values())
+            # print(object.rounds)
+            for round_number in range(len(object.rounds)):
+                # print(round_number)
+                round_as_dict = object.rounds[round_number]
+                # print(round_as_dict)
+                object.rounds[round_number] = Round(*round_as_dict.values())
+                # print(object.rounds)
+            # print(object.rounds)
         else:
             error = f"Provided type '{type}'' is not a valid database table."
             raise error

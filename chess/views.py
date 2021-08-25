@@ -5,7 +5,6 @@
 
 from os import stat
 
-
 class BaseView():
     @staticmethod
     def render():
@@ -20,7 +19,6 @@ class BaseView():
     def get_user_tournament_choice(self):
         return input('\nVeuillez entrer l\'id d\'un tournoi existant ? ')
         
-
     def print_header(self, title):
         print(
             "\n|========================================|\n"
@@ -106,10 +104,10 @@ class PlayerHomeView(BaseView):
         return input('Année de naissance (format DD-MM-YYYY) :')
 
     def get_ranking(self):
-        return input('Classement (entier positif) :')
-
-    # def print_confirmation_added_player():
-    #     return 
+        try:
+            return int(input('Classement (entier positif) :'))
+        except ValueError:
+            return self.get_ranking()
 
     def print_homonyme(self, inputted_data, homonymes_list):
         print(

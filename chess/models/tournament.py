@@ -28,6 +28,6 @@ class Tournament:
 
     def serialize(self):
         composition = vars(self)
-        composition['round'] = [round for round in self.rounds]
+        composition['rounds'] = [round for round in self.rounds]
         # composition['matchs'] = [str(match_) for match_ in self.matchs]
         return composition

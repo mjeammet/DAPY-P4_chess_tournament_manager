@@ -48,8 +48,6 @@ class Database:
             table.truncate()
             return None
 
-
-
     """ def database_verification():
         for tables:
             for object:

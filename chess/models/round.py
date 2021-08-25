@@ -1,17 +1,15 @@
-from datetime import datetime
-
 class Round:
     """ Un tour de jeu. """
 
-    def __init__(self, turn_name, matchs): 
+    def __init__(self, turn_name, start_datetime, end_datetime, matchs): 
         self.name = turn_name
-        self.start_datetime = str(datetime.today())
-        self.end_datetime = None
+        self.start_datetime = start_datetime
+        self.end_datetime = end_datetime
         self.matchs = matchs
 
-    def mark_as_finished(self):
+    def mark_as_finished(self, end_datetime):
         """Mark round as finished, sets endtime and calls for an update of match results."""
-        self.end_datetime = str(datetime.today())
+        self.end_datetime = end_datetime
         self.is_finished = True
 
         for match in self.matchs:
