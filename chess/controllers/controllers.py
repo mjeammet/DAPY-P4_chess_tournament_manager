@@ -436,11 +436,10 @@ class TournamentMenuController:
             # first round, players order is based on ranking 
             # and 1 meets 4, 2 meets 5, etc
             players_order = self.sort_players(self.current_tournament.players, by = 'ranking')
-            print(players_order)
-            paired_players = self.pair_players_swiss_style(players_order)
         else:
             players_order = self.sort_players(self.current_tournament.players, by = 'score')
-            paired_players = self.pair_players(players_order)
+    
+        paired_players = self.pair_players(players_order, round_number)
    
         new_round_matchs = []
         for pair in paired_players:
@@ -515,40 +514,36 @@ class TournamentMenuController:
     #             print(previous_round)
 
     # TODO merge the two fucntions in a single smarter one
-    def pair_players(self, players_ordered_list):
+    def pair_players(self, players_ordered_list, round_number):
         """Pairs players together from player list.
-        Pairs 1 with 2, 3 with 4 EXCEPT if 1 as already met 2, in which case it matches them with 3, etc"""
-        pair_list = []
-        players_left_to_match = players_ordered_list 
-        # print(player_dict)
-        while players_left_to_match != []:
-            # print(players_left_to_match)
-            p1_id = players_left_to_match[0]
-            p2_id = players_left_to_match[1]
-            # print(player_id)
-            duo = (p1_id, p2_id)
-            pair_list.append(duo)
-            players_left_to_match.remove(p1_id)
-            players_left_to_match.remove(p2_id)
+        
+        Args: 
+            - An ordered list of players_ids
 
-        return pair_list
-            
-    def pair_players_swiss_style(self, players_list):
-        """Generates pairs of players for the next round
-        
-        Args:
-            - score_list : A list of lists containing players and scores """
-        
+        Returns:
+            - A list of this round's pairs """
         pair_list = []
-                
-        half = int(PLAYERS_PER_TOURNAMENT/2)
-        # Making special pairs for first round
-        highest_half = players_list[:half]
-        lowest_half = players_list[half:]
-        
-        for position in range(len(highest_half)):
-            duo = ([highest_half[position], lowest_half[position]])
-            pair_list.append(duo)
+
+        if round_number == 0:
+            # Pairs weirdly : 1 with 5, 2 with 6, etc
+            half = int(PLAYERS_PER_TOURNAMENT/2)
+            # Making special pairs for first round
+            highest_half = players_ordered_list[:half]
+            lowest_half = players_ordered_list[half:]
+            
+            for position in range(len(highest_half)):
+                duo = ([highest_half[position], lowest_half[position]])
+                pair_list.append(duo)
+        elif round_number > 0:
+            # Pairs from top to bottom, avoiding matching players who already played together
+            players_left_to_match = players_ordered_list 
+            while players_left_to_match != []:
+                p1_id = players_left_to_match[0]
+                p2_id = players_left_to_match[1]
+                duo = (p1_id, p2_id)
+                pair_list.append(duo)
+                players_left_to_match.remove(p1_id)
+                players_left_to_match.remove(p2_id)
 
         return pair_list
     
