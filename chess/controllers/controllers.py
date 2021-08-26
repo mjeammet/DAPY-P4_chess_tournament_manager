@@ -5,7 +5,7 @@ from chess.models import Database
 from chess.models import Player, Tournament, Round, Match
 from chess import views
 from settings import VERBOSE, PLAYERS_PER_TOURNAMENT, ROUNDS_PER_TOURNAMENT
-UPDATE_DATABASE = False
+UPDATE_DATABASE = True
 
 # recup les scores de cette manière si les un-tupler dans la méthode "sort_players" ne me satisfait pas
 # then again, cette solution ne me satisfait pas non plus
@@ -77,7 +77,7 @@ class HomeController:
         date = self.view.get_date()
         time_control = self.view.get_time_control()
         description = self.view.get_description()
-        return [name, location, date, [], [], time_control, description]        
+        return [name, location, date, [], {}, time_control, description]        
 
     def add_new_tournament_to_database(self, new_tournament_info):
         """Add a new tournament to the database.
@@ -294,6 +294,7 @@ class TournamentMenuController:
                 if len(self.current_tournament.players) == PLAYERS_PER_TOURNAMENT:
                     self.view.print_alert("8ème participant.e ajouté.e au tournoi. Le tournoi est désormais plein ! ")
 
+            self.view.press_enter()
             return self.run()        
         elif next_action == "3":
             # Selected "prints rounds"
@@ -408,14 +409,15 @@ class TournamentMenuController:
         player_id = int(input("Id du joueur que vous souhaiter ajouter : "))
         
         # Check if player is not already registered in tournament
-        if player_id in [int(player_id) for player_id in self.current_tournament.players.keys()]:
-            print("Player already in tournament.")
+        if len(self.current_tournament.players) > 0:
+            if player_id in [int(player_id) for player_id in self.current_tournament.players.keys()]:
+                print("Player already in tournament.")
 
         # Making sure que le player est bien dans la DB
         db_match = self.database.players_table.get(doc_id = player_id)
         print(db_match)
         if db_match is not None:
-            self.current_tournament.players[player_id] = 0
+            self.current_tournament.players[str(player_id)] = 0
             # if VERBOSE: 
             #     print(f'    {player["first_name"]} ajouté.e au tournoi')
             self.database.tournaments_table.update({"players": self.current_tournament.players}, Query().name == self.current_tournament.name)  
@@ -435,23 +437,23 @@ class TournamentMenuController:
             # and 1 meets 4, 2 meets 5, etc
             players_order = self.sort_players(self.current_tournament.players, by = 'ranking')
             print(players_order)
-            round_matchs = self.pair_players_swiss_style(players_order)
+            paired_players = self.pair_players_swiss_style(players_order)
         else:
             players_order = self.sort_players(self.current_tournament.players, by = 'score')
-            round_matchs = self.pair_players(players_order)
-            
-            exit()
-        # TODO find a way to store matches as dictionaries too
-        # upsert a temporary 
-        # checking if we have a duo we already previously had
-        # if it's the case, try and mickmack with someone else
+            paired_players = self.pair_players(players_order)
+   
+        new_round_matchs = []
+        for pair in paired_players:
+            new_match = Match(([pair[0], 0], [pair[1], 0]))
+            new_round_matchs.append(new_match)
 
         # New round infos
         round_name = f'Round_{round_number}'
         round_starttime = str(datetime.today())
         round_endtime = None
+        print(new_round_matchs)
         
-        new_round = Round(round_name, round_starttime, round_endtime, round_matchs)
+        new_round = Round(round_name, round_starttime, round_endtime, new_round_matchs)
         print(f'{new_round.name} créé le {new_round.start_datetime}.')
         return new_round 
      
@@ -490,60 +492,65 @@ class TournamentMenuController:
         
         # filters the database to only get this tournament's entrants
         entrants_infos = []
-        for entrants in entrants_list:
-            entrants_infos.append(self.database.players_table.get(doc_id = entrants["id"]))
+        for entrants_id in entrants_list.keys():
+            # extract player infos from the database and add score
+            players_infos = self.database.players_table.get(doc_id = int(entrants_id))
+            players_infos["score"] = int(self.current_tournament.players[str(entrants_id)])
+            entrants_infos.append(players_infos)
 
         if by == "ranking":
-            sorted_players = [player.doc_id for player in sorted(entrants_infos, key = lambda x:x['ranking'], reverse=True)]
-            return sorted_players
+            return [player.doc_id for player in sorted(entrants_infos, key = lambda x:x['ranking'], reverse=True)]
         elif by == 'name':
-                return [player.doc_id for player in sorted(entrants, key = lambda x:x['last_name'])]
+            return [player.doc_id for player in sorted(entrants_infos, key = lambda x:x['last_name'])]
         elif by == 'score':
-            pass 
-            # print(self.current_tournament.serialize())
-            # total_score = [0] * PLAYERS_PER_TOURNAMENT
-            # for previous_round in self.current_tournament.rounds:
-            #     matchs_results = self.current_tournament.rounds[-1].matchs
-            #     flat_round = [player for match in matchs_results for player in match]
-            #     print(flat_round)
-            
-            # previous_round = self.current_tournament.rounds[-1].matchs
-            # flat_round = [player for match in previous_round for player in match]
-            # test = sorted(flat_round, key=lambda x:x[1], reverse=True)
-            # sorted_players = [player_id_and_score[0] for player_id_and_score in test] 
-            # #  TODO Ajouter une deuxième couche de tri par ranking
-            # return sorted_players
+            return [player.doc_id for player in sorted(entrants_infos, key = lambda x: (x['score'], x['ranking']), reverse=True)]
         else:
             message = (f'Cannot sort by {by}. Please sort by \'score\', \'ranking\' or \'name\' instead.')
             self.view.print_alert(message)
 
-    def pair_players(self, players_list):
-        print(players_list)
+    # def get_previous_opponents_list(self, player_id):
+    #     for previous_round in self.current_tournament.rounds:
+    #             for match in previous_round.matchs:
 
-        pass
-        # 'normal' pairing : 
-            # 1 with 2, 3 with 4
-            # EXCEPT if 1 as already met 2
+    #             print(previous_round)
 
+    # TODO merge the two fucntions in a single smarter one
+    def pair_players(self, players_ordered_list):
+        """Pairs players together from player list.
+        Pairs 1 with 2, 3 with 4 EXCEPT if 1 as already met 2, in which case it matches them with 3, etc"""
+        pair_list = []
+        players_left_to_match = players_ordered_list 
+        # print(player_dict)
+        while players_left_to_match != []:
+            # print(players_left_to_match)
+            p1_id = players_left_to_match[0]
+            p2_id = players_left_to_match[1]
+            # print(player_id)
+            duo = (p1_id, p2_id)
+            pair_list.append(duo)
+            players_left_to_match.remove(p1_id)
+            players_left_to_match.remove(p2_id)
+
+        return pair_list
+            
     def pair_players_swiss_style(self, players_list):
         """Generates pairs of players for the next round
         
         Args:
             - score_list : A list of lists containing players and scores """
         
-        list_of_matchs = []
-        
-        players_and_scores_list = [[player,0] for player in players_list]            
+        pair_list = []
+                
         half = int(PLAYERS_PER_TOURNAMENT/2)
         # Making special pairs for first round
-        highest_half = players_and_scores_list[:half]
-        lowest_half = players_and_scores_list[half:]
+        highest_half = players_list[:half]
+        lowest_half = players_list[half:]
         
         for position in range(len(highest_half)):
-            match = Match(([highest_half[position], lowest_half[position]]))
-            list_of_matchs.append(match)
+            duo = ([highest_half[position], lowest_half[position]])
+            pair_list.append(duo)
 
-        return list_of_matchs
+        return pair_list
     
     def get_updated_match(self, match):
         print(match)

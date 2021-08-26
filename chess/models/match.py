@@ -1,15 +1,6 @@
 class Match(tuple):
     def __init__(self, duet):
         self = duet
-        
-    # def update_results(self, result_player1, result_player2):
-    #     """ Updates results of a match. """
-
-    #     if (result_player1,result_player2) == (None, None):
-    #         print('Please input results')
-    #     else:
-    #         self[0][1] += result_player1
-    #         self[1][1] += result_player2
     
     def serialize(self):
         print_duet = print(self)
