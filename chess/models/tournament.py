@@ -8,18 +8,14 @@ class Tournament:
     """Un tournoi
     TODO Gestion du temps"""
 
-    def __init__(self, name, location, date='', rounds = '', players = [], time_control = '', description=''):
+    def __init__(self, name, location, date, rounds, players, time_control, description):
         self.name = name
         self.location = location
-        self.date = date        
+        self.date = date
+        self.rounds = rounds
         self.players = players
         self.time_control = time_control
         self.description = description
-
-        if rounds == '' or rounds == []:
-            self.rounds = []
-        else:
-            self.rounds = rounds
 
     def __str__(self):
         print(

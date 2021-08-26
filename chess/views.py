@@ -3,7 +3,8 @@
 # classe abstraite "view" et sous-classes "main_menu", "adding player", etc ?
 # class view
 
-from os import stat
+from chess.models import players
+from os import get_terminal_size, stat
 
 class BaseView():
     @staticmethod
@@ -28,11 +29,15 @@ class BaseView():
 
     def print_alert(self, info_text):
         print(info_text)
-        self.press_any_key()
 
-    def press_any_key(self):
-        input("Presser 'Entrée' pour retourner à la selection.")
+    def press_enter(self):
+        input("Retour au menu de sélection.")
 
+    def id_not_found(self, id, table_name):
+        print(f"Id {id} introuvable dans la table \"{table_name}\". Opération annulée.")
+
+    def print_player_details(self, players_details):
+        print(players_details)
 
 class HomeView(BaseView):
     """View of the main menu."""
@@ -165,17 +170,15 @@ class TournamentHomeView(BaseView):
         # print(f'{match}')
         return match
 
+    def get_match_score(self, player_id):
+        inputted_score = float(input(f"Score du joueur {player_id} : "))
+        # TODO add a try except to catch les petits malins qui mettent des 
+        if inputted_score not in [0, 0.5, 1]:
+            print(f'Score must be 0, 1 or 0.5. Cannot be {inputted_score}')
+            return self.get_match_score()
+        
+        return inputted_score       
 
-class ReportMenu(BaseView):
-
-    @staticmethod
-    def render():
-        print(         
-            "2. Liste de tous les tournois.\n"
-
-            "0. Retour au menu principal.\n"
-            "9. Quitter le programme.\n"
-        )
 
 class EndView:
     """Vue responsable de l'affichage de menu de fin d'application."""
