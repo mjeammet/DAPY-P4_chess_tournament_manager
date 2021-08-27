@@ -1,15 +1,10 @@
-# from chess.models import Player, Tournament
+from chess.models import tournament
 
-# classe abstraite "view" et sous-classes "main_menu", "adding player", etc ?
-# class view
-
-from chess.models import players
-from os import get_terminal_size, stat
 
 class BaseView():
     @staticmethod
     def render():
-        print("stuff")
+        print("")
 
     def get_user_choice(self):
         return input('\nQue souhaitez-vous faire ? ').lower()
@@ -27,8 +22,8 @@ class BaseView():
             "|========================================|"
         )
 
-    def print_alert(self, info_text):
-        print(info_text)
+    def print_alert(self, alert_text):
+        print(alert_text)
 
     def press_enter(self):
         input("Retour au menu de sélection.")
@@ -36,8 +31,35 @@ class BaseView():
     def id_not_found(self, id, table_name):
         print(f"Id {id} introuvable dans la table \"{table_name}\". Opération annulée.")
 
+    def cancelled(self):
+        print("Opération annulée.")
+
     def print_player_details(self, players_details):
         print(players_details)
+
+    def print_tournament_details_header(self):
+        print(
+            "Nom\t\t\t"
+            "Lieu\t"
+            "Date\t"
+            "Time control\t"
+            "Tour joués\t"
+            "Gagnant.e.s"
+        )
+
+    def print_tournament_details(self, tournament_details):
+        # print(tournament_details)
+        print(
+            f"{tournament_details['name']}\t"
+            f"{tournament_details['location']}\t"
+            f"{tournament_details['date']}\t"
+            f"{tournament_details['time_control']}\t"
+            f"{len(tournament_details['rounds'])}\t"
+            "-"
+        )
+
+    def type_error(type):
+        print(f"Doit être de type {type}.")
 
 class HomeView(BaseView):
     """View of the main menu."""
@@ -57,11 +79,6 @@ class HomeView(BaseView):
             "Tournament manager v.0.10.0.\n"
             "Read README.md."
             )
-
-    # def print_tournaments(self, tournaments_list):
-    #     """Prints all current and past players in db."""
-    #     for tournament in tournaments_list:
-    #         print(tournament)
 
     def get_name(self):
         return input("Nom du tournoi : ")
@@ -103,25 +120,25 @@ class PlayerHomeView(BaseView):
         return input('Nom de famille :')
 
     def get_gender(self):
-        return input("Genre ('F','M','X'\) :")
+        inputted_gender = input("Genre ('F','M','X'\) :")
+        if inputted_gender not in ['F', 'M', 'X']:
+            print("Gender must be 'F', 'M' or 'X'.")
+            return self.get_gender()
     
     def get_birth_date(self):
         return input('Année de naissance (format DD-MM-YYYY) :')
 
     def get_ranking(self):
-        try:
-            return int(input('Classement (entier positif) :'))
-        except ValueError:
-            return self.get_ranking()
+        return input('Classement (entier positif) :')
 
-    def print_homonyme(self, inputted_data, homonymes_list):
+    def print_duplicate_alert(self, inputted_data, duplicate_list):
         print(
             "Vous souhaitez ajouter:\n"
             f"      {inputted_data[0]} {inputted_data[1]} ({inputted_data[2]}), né.e le {inputted_data[3]} et classé {inputted_data[4]}.\n"
             "La base de données contient déjà une ou des entrées similaires:"
         )
-        for homonyme in homonymes_list:
-            print(f"      {homonyme['first_name']} {homonyme['last_name']} ({homonyme['gender']}), né.e le {homonyme['birth_date']} et classé {homonyme['ranking']}.\n")
+        for duplicate in duplicate_list:
+            print(f"      {duplicate['first_name']} {duplicate['last_name']} ({duplicate['gender']}), né.e le {duplicate['birth_date']} et classé {duplicate['ranking']}.\n")
         print(
             "Que souhaitez-vous faire ?\n"
             "1. Ecraser le joueur existant avec les nouvelles données.\n"
@@ -179,8 +196,7 @@ class TournamentHomeView(BaseView):
         
         return inputted_score       
 
-
-class EndView:
+class EndView(BaseView):
     """Vue responsable de l'affichage de menu de fin d'application."""
 
     def render(self):
@@ -188,24 +204,3 @@ class EndView:
 
     def confirm_exit(self):
         return input("Sûr (Y/N) ? ")
-
-    def notify_invalid_choice(self):
-        print("Choix non valable !\n\n")
-
-        
-# FUNCTIONS TO REWORK
-def print_tournament_rounds(tournament):
-    print(tournament.rounds)
-
-def print_tournament_match(tournament):
-    print(tournament.matchs)
-
-def print_tournaments(tournament):
-    """ Prints all infos on a tournament. """
-    print('---')
-
-    list_tournament_players(tournament)
-    
-    for turn in range(1,tournament.turn+1):
-        print('Tour', turn, ":")
-        print('     ',tournament.generate_pairs())

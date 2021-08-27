@@ -7,12 +7,6 @@ from chess import views
 from settings import VERBOSE, PLAYERS_PER_TOURNAMENT, ROUNDS_PER_TOURNAMENT
 UPDATE_DATABASE = True
 
-# recup les scores de cette manière si les un-tupler dans la méthode "sort_players" ne me satisfait pas
-# then again, cette solution ne me satisfait pas non plus
-# def get_scores(players_list, tournament):
-
-# TODO TournamentMenuController > turn self.current_controller_id into the object tournament
-
 class ApplicationController:
     """The app itself. Prints welcome."""
 
@@ -29,7 +23,8 @@ class ApplicationController:
                 next_controller = self.current_controller.run()
                 self.current_controller = next_controller
         except KeyboardInterrupt:
-            print("\nBISOUUUUUS !")
+            self.view = views.EndView()
+            self.view.print_alert("\nFermeture au clavier. Ciao !")
 
 class HomeController:
     """Controller for Home menu."""
@@ -45,10 +40,14 @@ class HomeController:
         if next_action == "1":
             # Displays all tournaments
             tournaments_list = self.database.tournaments_table.all()
+            if len(tournaments_list) == 0:
+                self.view.print_alert("Aucun tournoi à afficher.")
+            else:
+                self.view.print_tournament_details_header()
             for tournament in tournaments_list:
-                print(tournament)
+                self.view.print_tournament_details(tournament)
             self.view.press_enter()
-            return HomeController()
+            return self.run()
         elif next_action == "2":
             # Creation of a new tournament
             new_tournament_infos = self.get_new_tournament_info()
@@ -132,35 +131,62 @@ class PlayerMenuController:
         return None
 
     def get_new_player_info(self):
-        print("Ajout d'un nouveau participant.")
+        self.view.print_alert("Ajout d'un nouveau participant.")
         # TODO faire ça en plus class ou on valide avec une fonction dédiée ? Un wrapper ?
         
-        first_name = self.view.get_first_name()
-        last_name = self.view.get_last_name()        
-        birth_date = self.view.get_birth_date()
-        gender = self.view.get_gender()
-        ranking = self.view.get_ranking()
+        first_name = self.view.get_valid_first_name()
+        last_name = self.view.get_valid_last_name()        
+        birth_date = self.view.get_valid_birth_date()
+        gender = self.view.get_valid_gender()
+        ranking = self.view.get_valid_ranking()
         new_player_info = [first_name, last_name, birth_date, gender, ranking]
 
-        # TODO check if player is already in the database
-        # TODO transformer en une une fonction search_player() qui servira aussi à aller update les infos du player
-        
+        # TODO transformer en une une fonction search_player() qui servira aussi à aller update les infos du player        
         existing_duplicate = self.check_existing_duplicate(new_player_info)
         if existing_duplicate != []:
-            self.view.print_homonyme(new_player_info, existing_duplicate)
+            self.view.print_duplicate_alert(new_player_info, existing_duplicate)
             next_action = self.view.get_user_choice()
             if next_action == '1':
                 self.update_player_infos()
             elif next_action == "2":
                 self.add_player_to_database(new_player_info)
             elif next_action == "3":
-                print("Ajout annulé.\n")
+                self.view.cancelled()
             else:
                 self.view.notify_invalid_choice()                
         else:
             self.add_player_to_database(new_player_info)
             return None            
-            
+
+    def get_valid_name(self):
+        try: 
+            str(self.view.get_first_name())
+        except:
+            return self.view.get_first_name()
+    
+    def get_valid_name(self):
+        return input('Nom de famille :')
+
+    def get_valid_gender(self):
+        inputted_gender = self.view.get_gender()
+        if inputted_gender not in ['F', 'M', 'X']:
+            self.view.print_alert("Gender must be 'F', 'M' or 'X'.")
+            return self.get_valid_gender()
+    
+    def get_valid_birth_date(self):
+        return self.view.get_birth_date()
+
+    def get_valid_ranking(self):
+        """Prompt user for player ranking and validate data.
+        
+        Returns:
+            - An integer, for player ranking."""
+        try:
+            return int(self.view.get_ranking)
+        except ValueError:
+            self.view.type_error("integer")
+            return self.get_valid_ranking()
+
     def check_existing_duplicate(self, new_player_info):
         """From inputted player info, check for duplicate in the database."""
         first_name = new_player_info[0]
@@ -428,7 +454,7 @@ class TournamentMenuController:
         self.run()
 
     def create_new_round(self):   
-        """Add a new round to """
+        """Creates a new round for current tournament. """
         round_number = int(len(self.current_tournament.rounds))+1
         print(f'Starting round number {round_number}')
 
@@ -450,10 +476,9 @@ class TournamentMenuController:
         round_name = f'Round_{round_number}'
         round_starttime = str(datetime.today())
         round_endtime = None
-        print(new_round_matchs)
         
         new_round = Round(round_name, round_starttime, round_endtime, new_round_matchs)
-        print(f'{new_round.name} créé le {new_round.start_datetime}.')
+        self.view.print_alert(f'{new_round.name} créé le {new_round.start_datetime}.')
         return new_round 
      
     def check_ready_for_new_round(self):
@@ -507,13 +532,6 @@ class TournamentMenuController:
             message = (f'Cannot sort by {by}. Please sort by \'score\', \'ranking\' or \'name\' instead.')
             self.view.print_alert(message)
 
-    # def get_previous_opponents_list(self, player_id):
-    #     for previous_round in self.current_tournament.rounds:
-    #             for match in previous_round.matchs:
-
-    #             print(previous_round)
-
-    # TODO merge the two fucntions in a single smarter one
     def pair_players(self, players_ordered_list, round_number):
         """Pairs players together from player list.
         
@@ -524,7 +542,7 @@ class TournamentMenuController:
             - A list of this round's pairs """
         pair_list = []
 
-        if round_number == 0:
+        if round_number == 1:
             # Pairs weirdly : 1 with 5, 2 with 6, etc
             half = int(PLAYERS_PER_TOURNAMENT/2)
             # Making special pairs for first round
@@ -534,19 +552,42 @@ class TournamentMenuController:
             for position in range(len(highest_half)):
                 duo = ([highest_half[position], lowest_half[position]])
                 pair_list.append(duo)
-        elif round_number > 0:
+        elif round_number > 1:
             # Pairs from top to bottom, avoiding matching players who already played together
             players_left_to_match = players_ordered_list 
             while players_left_to_match != []:
                 p1_id = players_left_to_match[0]
-                p2_id = players_left_to_match[1]
+                p2_id = self.first_unmet_partner(p1_id, players_left_to_match[1:])
                 duo = (p1_id, p2_id)
                 pair_list.append(duo)
                 players_left_to_match.remove(p1_id)
                 players_left_to_match.remove(p2_id)
 
         return pair_list
-    
+
+    def first_unmet_partner(self, player_to_match, list_of_candidates):        
+        met_players = self.get_previously_met_players(player_to_match)
+        print(f"    Matching for {player_to_match}, who already met {met_players}")
+        for candidate in list_of_candidates:
+            if candidate not in met_players:
+                return candidate
+        
+        # if we run out of candidates AKA player_to_match already met everyone
+        return list_of_candidates[0]
+
+    def get_previously_met_players(self, player_id):
+        """Browse past rounds to """
+        met_players = []
+        for past_round in self.current_tournament.rounds:
+            for past_match in past_round.matchs:
+                if player_id == past_match[0][0]:
+                    met_players.append(past_match[1][0])
+                elif player_id == past_match[1][0]:
+                    met_players.append(past_match[0][0])
+                else:
+                    pass 
+        return met_players
+
     def get_updated_match(self, match):
         print(match)
         p1_id = match[0][0]
@@ -583,14 +624,10 @@ def unserialize_object(serialized_object, type):
             object = Player(*serialized_object.values())
         elif type.lower() == "tournaments":
             object = Tournament(*serialized_object.values())
-            # print(object.rounds)
             for round_number in range(len(object.rounds)):
-                # print(round_number)
                 round_as_dict = object.rounds[round_number]
-                # print(round_as_dict)
                 object.rounds[round_number] = Round(*round_as_dict.values())
                 # TODO make sure every match is a tuple of lists and not a list of lists
-            # print(object.rounds)
         else:
             error = f"Provided type '{type}'' is not a valid database table."
             raise error
