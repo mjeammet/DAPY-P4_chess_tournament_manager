@@ -1,6 +1,7 @@
 # Chess tournaments manager
 
-Marie Jeammet - v0.11 - 2021/08
+Marie Jeammet - v1.0 - 2021/08
+marie.jeammet@protonmail.com
 
 ## Context
 
@@ -8,10 +9,10 @@ Offline tool for tournaments management. Answers to commandline input.
 
 Technologies
 
-This project was created with Python 3.6.9
-and using tinydb version 4.5.1
+This project using Python 3.6.9
+and tinydb version 4.5.1
 
-## Usage
+## Installation
 ### Cloning the project
 
 Clone project the project to desired location:
@@ -22,15 +23,31 @@ Clone project the project to desired location:
 
 In the project's directory, create and activate the environment:
 
-`$ python3 -m venv env`
-`$ source env/bin/activate`
+```$ python3 -m venv env
+$ source env/bin/activate```
 
 and install required packages with:
 
 `$ pip install -r requirements.txt`
 
-### Running the script
+##  Usage
 
 Once you've activated your environment and made sure all required packages are correctly set up, go and run:
 
 `$ python main.py`
+
+Follow textual instructions on the screen to 
+- Add players and tournaments to database
+- Add players to tournament
+- Starts a new round and add round results
+- Prints reports on players, tournaments, rounds and matches 
+
+To navigate, simply input the number corresponding to your next desired action. 
+
+## Flake8
+
+flake8 was used in this projet to make sure PEP 8 recommandations where followed. 
+
+To generate a new report : 
+
+`$ flake8 --format=html --htmldir=flake8-report --exclude env,__pycache__`

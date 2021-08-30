@@ -64,8 +64,8 @@ class BaseView():
 class HomeView(BaseView):
     """View of the main menu."""
 
-    @staticmethod
-    def render():
+    def render(self):
+        self.print_header("MENU PRINCIPAL")
         print(
             "1. Lister les tournois existants.\n"
             "2. Créer un tournoi.\n"

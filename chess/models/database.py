@@ -30,8 +30,6 @@ class Database:
         
         return id of the newly added element."""
         table = self.database.table(table_name)
-        # players_database.append(object) # relique de quand la db était une simple liste 
-        # print(vars(self))
         table.insert(vars(serialized_object))
         if VERBOSE:           
             print(f'    {serialized_object} ajouté.e à la base de données.')

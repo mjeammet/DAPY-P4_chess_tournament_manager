@@ -1,24 +1,24 @@
+import re
 from datetime import datetime
 from tinydb import Query
-from chess.models import Tournament
 from chess.models import Database
 from chess.models import Player, Tournament, Round, Match
 from chess import views
 from settings import VERBOSE, PLAYERS_PER_TOURNAMENT, ROUNDS_PER_TOURNAMENT
 UPDATE_DATABASE = True
 
+
 class ApplicationController:
-    """The app itself. Prints welcome."""
+    """Controller for the app itself."""
 
     def __init__(self):
-        """Initialise la classe principale de l'application."""
         self.current_controller = HomeController()
 
     def start(self):
-        """Démarre l'application."""
+        """Starts the app and handle keyboard interruptions."""
         self.current_controller.view.print_welcome()
 
-        try: 
+        try:
             while self.current_controller is not None:
                 next_controller = self.current_controller.run()
                 self.current_controller = next_controller
@@ -26,16 +26,17 @@ class ApplicationController:
             self.view = views.EndView()
             self.view.print_alert("\nFermeture au clavier. Ciao !")
 
+
 class HomeController:
     """Controller for Home menu."""
     def __init__(self):
-        self.title = "MENU PRINCIPAL"
         self.view = views.HomeView()
         self.database = Database()
 
     def run(self):
-        self.view.print_header(self.title)
+        """Run controller."""
         self.view.render()
+
         next_action = self.view.get_user_choice()
         if next_action == "1":
             # Displays all tournaments
@@ -51,11 +52,16 @@ class HomeController:
         elif next_action == "2":
             # Creation of a new tournament
             new_tournament_infos = self.get_new_tournament_info()
-            new_tournament = self.add_new_tournament_to_database(new_tournament_infos)
+            new_tournament = Tournament(*new_tournament_infos)
+
+            self.add_new_tournament_to_database(new_tournament)
+            self.view.press_enter()
             return self.run()
         elif next_action == "3":
+            # Go to Tournament menu
             return TournamentMenuController(current_tournament=None)
         elif next_action == '4':
+            # Go to Player menu
             return PlayerMenuController()
         elif next_action == "9":
             return EndController()
@@ -64,37 +70,31 @@ class HomeController:
             return self.run()
 
     def get_new_tournament_info(self) -> int:
-        """Get all infos for new tournament.
-        
+        """Get all infos to create a new tournament object.
         Args:
-            (none)
-            
-        Returns a list containing the collected datas"""
-        # TODO for argument in signature(Tournament): ? 
+            - None
+        Returns:
+            - A list containing collected data"""
+        # TODO récupérer la liste des champs avec "signature(Tournament)" ?
         name = self.view.get_name()
         location = self.view.get_location()
         date = self.view.get_date()
         time_control = self.view.get_time_control()
         description = self.view.get_description()
-        return [name, location, date, [], {}, time_control, description]        
+        return [name, location, date, [], {}, time_control, description]
 
-    def add_new_tournament_to_database(self, new_tournament_info):
+    def add_new_tournament_to_database(self, tournament):
         """Add a new tournament to the database.
-        Probably to move in database model.
-        
         Args:
             - Informations of new tournament
-    
         Returns:
             - database id of the new tournament"""
-        new_tournament = Tournament(*new_tournament_info)
-        new_tournament_id = self.database.add_to_database("tournaments", new_tournament)
-        # new_player_id = self.database.players_table.all()[-1].doc_id
-        print(f'---\n{new_tournament_info[0]} succesfully added with id {new_tournament_id}.')
-        self.view.press_enter()
-        self.current_tournament = new_tournament
-        # TODO faire en sorte que le current_tournament change après l'ajout d'un tournoi
-        return new_tournament
+        table_name = "tournaments"
+        tournament_id = self.database.add_to_database(table_name, tournament)
+        alert = f'---\n{tournament.name} succesfully added with id {tournament_id}.'
+        self.view.print_alert(alert)
+        return None
+
 
 class PlayerMenuController:
     """Controller for Player menu."""
@@ -125,23 +125,23 @@ class PlayerMenuController:
             return PlayerMenuController()
 
     def list_database_players(self):
-        # lists all players in database
+        """Lists players in database."""
         player_list = self.database.players_table.all()
         self.view.print_players(player_list)
         return None
 
     def get_new_player_info(self):
+        """Collects player info from the user."""
         self.view.print_alert("Ajout d'un nouveau participant.")
-        # TODO faire ça en plus class ou on valide avec une fonction dédiée ? Un wrapper ?
-        
-        first_name = self.view.get_valid_first_name()
-        last_name = self.view.get_valid_last_name()        
+        # Collecting player info
+        first_name = self.get_valid_first_name()
+        last_name = self.get_valid_last_name()
         birth_date = self.view.get_valid_birth_date()
         gender = self.view.get_valid_gender()
         ranking = self.view.get_valid_ranking()
         new_player_info = [first_name, last_name, birth_date, gender, ranking]
 
-        # TODO transformer en une une fonction search_player() qui servira aussi à aller update les infos du player        
+        # TODO transformer en une fonction search_player() qui servira aussi à aller update les infos du player        
         existing_duplicate = self.check_existing_duplicate(new_player_info)
         if existing_duplicate != []:
             self.view.print_duplicate_alert(new_player_info, existing_duplicate)
@@ -158,14 +158,29 @@ class PlayerMenuController:
             self.add_player_to_database(new_player_info)
             return None            
 
-    def get_valid_name(self):
-        try: 
-            str(self.view.get_first_name())
-        except:
-            return self.view.get_first_name()
+    def get_valid_first_name(self):
+        """Get valid first_name from user.
+        Args:
+            - None
+        Returns:
+            - a validated string."""
+        inputted_name = self.view.get_first_name()
+        if re.fullmatch("[A-Za-z]", inputted_name): 
+            return inputted_name
+        else: 
+            return self.get_valid_first_name()
     
-    def get_valid_name(self):
-        return input('Nom de famille :')
+    def get_valid_last_name(self):
+        """Get valid last_name from user.
+        Args:
+            - None
+        Returns:
+            - a validated string."""
+        inputted_name = self.view.get_last_name()
+        if re.fullmatch("[A-Za-z]", inputted_name): 
+            return inputted_name
+        else: 
+            return self.get_valid_last_name()
 
     def get_valid_gender(self):
         inputted_gender = self.view.get_gender()
@@ -177,8 +192,7 @@ class PlayerMenuController:
         return self.view.get_birth_date()
 
     def get_valid_ranking(self):
-        """Prompt user for player ranking and validate data.
-        
+        """Prompt user for player ranking and validate data.        
         Returns:
             - An integer, for player ranking."""
         try:
@@ -255,24 +269,6 @@ class PlayerMenuController:
                 return PlayerMenuController()
             self.database.players_table.update({updated_field: updated_info}, doc_ids = [player_id])
 
-    # @wrap()
-    # def validate_data(self):
-        # print(function)
-
-        # def wrapper(*args, **kwargs):
-        #     return function (*args, **kwargs)
-            # print(user_input)
-            # while user_input == None or user_input == "": 
-            #     print("oh come on !")
-            #     user_input = function (*args, **kwargs)            
-            # return user_input
-
-
-        # if wanted_data == "first_name":
-        #     wanted_data = self.view.get_first_name()
-        #     while len(wanted_data) < 2 or wanted_data=="":
-        #         print("Le prénom ne peut pas être un champ vide ou un chiffre.\n")
-        #         wanted_data = self.view.get_first_name()
 
 class TournamentMenuController:
     """Controller for Tournament menu."""
