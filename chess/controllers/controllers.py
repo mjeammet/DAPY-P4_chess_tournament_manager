@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import date, datetime
 from tinydb import Query
 from chess.models import Database
 from chess.models import Player, Tournament, Round, Match
@@ -99,12 +99,10 @@ class HomeController:
 class PlayerMenuController:
     """Controller for Player menu."""
     def __init__(self):
-        self.title = "MENU DES JOUEURS"
         self.view = views.PlayerHomeView()
         self.database = Database()
 
     def run(self):
-        self.view.print_header(self.title)
         self.view.render()
         next_action = self.view.get_user_choice()
         if next_action == '1':
@@ -126,8 +124,18 @@ class PlayerMenuController:
 
     def list_database_players(self):
         """Lists players in database."""
-        player_list = self.database.players_table.all()
-        self.view.print_players(player_list)
+        all_players = self.database.players_table.all()
+
+        sorting_parameter = self.view.get_sorting_parameter()        
+        if sorting_parameter == "1":
+            sorted_list = sorted(all_players, key = lambda x:x['last_name'])
+        elif sorting_parameter == "2":
+            sorted_list = sorted(all_players, key = lambda x:x['ranking'], reverse=True)
+        else:
+            self.view.notify_invalid_choice()
+            self.view.press_enter()
+            self.run()
+        self.view.print_player_details(sorted_list)
         return None
 
     def get_new_player_info(self):
@@ -136,9 +144,9 @@ class PlayerMenuController:
         # Collecting player info
         first_name = self.get_valid_first_name()
         last_name = self.get_valid_last_name()
-        birth_date = self.view.get_valid_birth_date()
-        gender = self.view.get_valid_gender()
-        ranking = self.view.get_valid_ranking()
+        birth_date = self.get_valid_birth_date()
+        gender = self.get_valid_gender()
+        ranking = self.get_valid_ranking()
         new_player_info = [first_name, last_name, birth_date, gender, ranking]
 
         # TODO transformer en une fonction search_player() qui servira aussi à aller update les infos du player        
@@ -165,9 +173,10 @@ class PlayerMenuController:
         Returns:
             - a validated string."""
         inputted_name = self.view.get_first_name()
-        if re.fullmatch("[A-Za-z]", inputted_name): 
+        if re.fullmatch("[A-Za-z\-]*", inputted_name): 
             return inputted_name
-        else: 
+        else:
+            self.view.print_alert("Le prénom doit être uniquement constitué de lettres.")
             return self.get_valid_first_name()
     
     def get_valid_last_name(self):
@@ -177,26 +186,34 @@ class PlayerMenuController:
         Returns:
             - a validated string."""
         inputted_name = self.view.get_last_name()
-        if re.fullmatch("[A-Za-z]", inputted_name): 
+        if re.fullmatch("[A-Za-z\s]*", inputted_name): 
             return inputted_name
-        else: 
+        else:
+            self.view.print_alert("Le nom de famille doit être uniquement constitué de lettres (ou de \"-\").")
             return self.get_valid_last_name()
 
     def get_valid_gender(self):
         inputted_gender = self.view.get_gender()
-        if inputted_gender not in ['F', 'M', 'X']:
-            self.view.print_alert("Gender must be 'F', 'M' or 'X'.")
+        if inputted_gender.upper() not in ['F', 'M', 'X']:
+            self.view.print_alert("Le genre doit être 'F', 'M' or 'X'.")
             return self.get_valid_gender()
     
     def get_valid_birth_date(self):
-        return self.view.get_birth_date()
+        inputted_date = self.view.get_birth_date()
+        if re.fullmatch("[A-Za-z\s]*", inputted_date): 
+            return inputted_date
+        else:
+            self.view.print_alert("Le nom de famille doit être uniquement constitué de lettres (ou de \"-\").")
+            return self.get_valid_last_name()
+
 
     def get_valid_ranking(self):
         """Prompt user for player ranking and validate data.        
         Returns:
             - An integer, for player ranking."""
+        inputted_ranking = self.view.get_ranking
         try:
-            return int(self.view.get_ranking)
+            return int(inputted_ranking)
         except ValueError:
             self.view.type_error("integer")
             return self.get_valid_ranking()
@@ -205,7 +222,8 @@ class PlayerMenuController:
         """From inputted player info, check for duplicate in the database."""
         first_name = new_player_info[0]
         last_name = new_player_info[1]
-        return self.database.players_table.search((Query().first_name == first_name) & (Query().last_name == last_name))
+        return self.database.players_table.search(
+            (Query().first_name == first_name) & (Query().last_name == last_name))
     
     def add_player_to_database(self, new_player_info):
         """Add a player to the database.
@@ -498,14 +516,11 @@ class TournamentMenuController:
         else:
             return True
 
-    def sort_players(self, entrants_list, by = 'score', tournament_id=None):
-        """ Sorts player to generate pairs according to the swiss tournament pattern. 
-        
+    def sort_players(self, entrants_list, by = 'score'):
+        """ Sorts player to generate pairs according to the swiss tournament pattern.         
         Args:
             - a list of players
-            - by -- the parameter by which players will be sorted. Can be 'score' or 'ranking'.
-            - optional, a tournament_id to gather players' score in the database
-
+            - by -- the parameter by which players will be sorted. Can be 'score' or 'ranking'
         Returns:
         - a sorted list of players' ids
         """

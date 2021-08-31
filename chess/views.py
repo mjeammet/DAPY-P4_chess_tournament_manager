@@ -97,8 +97,8 @@ class HomeView(BaseView):
 
 class PlayerHomeView(BaseView):
 
-    @staticmethod
-    def render():
+    def render(self):
+        self.print_header("MENU DES JOUEURS")
         print(
             "1. Lister les joueurs présents dans la base de données.\n"
             "2. Ajouter un joueur à la base de données.\n"
@@ -107,11 +107,31 @@ class PlayerHomeView(BaseView):
             "9. Quitter le programme.\n"
         )
 
-    def print_players(self, unserialized_players_list):
-        # print(unserialized_players_list)
-        """Prints all current and past players in db."""
+    def get_sorting_parameter(self):
+        print(
+            "1. Par nom de famille\n"
+            "2. Par classement"
+        )
+        return self.get_user_choice()
+
+
+    def print_player_details(self, unserialized_players_list):
+        """Prints a list of players."""
+        print(
+            "Prénom\t\t",
+            "Nom\t\t",
+            "Sexe\t\t",
+            "Date de naissance\t",
+            "Classement")
         for player in unserialized_players_list:
-            print(f'- {player["first_name"]}')
+            player_line = f'{player["first_name"]}\t'
+            if len(player["first_name"]) < 8:
+                player_line += '\t'
+            player_line += f' {player["last_name"]}\t'
+            if len(player["last_name"]) < 7:
+                player_line += '\t'
+            player_line += f' {player["gender"]}\t\t {player["birth_date"]}\t\t {player["ranking"]}'
+            print(player_line)
 
     def get_first_name(self):
         return input('Prénom :')
@@ -120,10 +140,7 @@ class PlayerHomeView(BaseView):
         return input('Nom de famille :')
 
     def get_gender(self):
-        inputted_gender = input("Genre ('F','M','X'\) :")
-        if inputted_gender not in ['F', 'M', 'X']:
-            print("Gender must be 'F', 'M' or 'X'.")
-            return self.get_gender()
+        return input("Genre ('F','M','X'\) :")
     
     def get_birth_date(self):
         return input('Année de naissance (format DD-MM-YYYY) :')
