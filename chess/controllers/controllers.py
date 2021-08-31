@@ -194,24 +194,31 @@ class PlayerMenuController:
 
     def get_valid_gender(self):
         inputted_gender = self.view.get_gender()
-        if inputted_gender.upper() not in ['F', 'M', 'X']:
+        if inputted_gender.upper() in ['F', 'M', 'X']:
             self.view.print_alert("Le genre doit être 'F', 'M' or 'X'.")
+            return inputted_gender
+        else:
             return self.get_valid_gender()
     
     def get_valid_birth_date(self):
         inputted_date = self.view.get_birth_date()
-        if re.fullmatch("[A-Za-z\s]*", inputted_date): 
-            return inputted_date
-        else:
-            self.view.print_alert("Le nom de famille doit être uniquement constitué de lettres (ou de \"-\").")
-            return self.get_valid_last_name()
-
+        listed_input = inputted_date.split("-")
+        print(inputted_date)
+        try: 
+            date(int(listed_input[2]), int(listed_input[1]), int(listed_input[0]))
+            return 
+        except IndexError: 
+            self.view.print_alert("La date de nasisance doit être au format DD-MM-YYYY.")
+            return self.get_valid_birth_date()
+        except ValueError:
+            self.view.print_alert("La date de nasisance doit être au format DD-MM-YYYY.")
+            return self.get_valid_birth_date()
 
     def get_valid_ranking(self):
         """Prompt user for player ranking and validate data.        
         Returns:
             - An integer, for player ranking."""
-        inputted_ranking = self.view.get_ranking
+        inputted_ranking = self.view.get_ranking()
         try:
             return int(inputted_ranking)
         except ValueError:

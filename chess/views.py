@@ -58,7 +58,7 @@ class BaseView():
             "-"
         )
 
-    def type_error(type):
+    def type_error(self, type):
         print(f"Doit être de type {type}.")
 
 class HomeView(BaseView):
