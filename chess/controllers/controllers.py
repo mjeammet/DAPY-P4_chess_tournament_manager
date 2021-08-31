@@ -203,7 +203,6 @@ class PlayerMenuController:
     def get_valid_birth_date(self):
         inputted_date = self.view.get_birth_date()
         listed_input = inputted_date.split("-")
-        print(inputted_date)
         try: 
             date(int(listed_input[2]), int(listed_input[1]), int(listed_input[0]))
             return 
@@ -317,12 +316,17 @@ class TournamentMenuController:
             # Selected "prints entrants"
             if self.current_tournament == None:
                 self.current_tournament = self.select_current_tournament()
-
+           
             # Done by list comprehension instead of query logic https://github.com/msiemens/tinydb/issues/293
             for player_id in self.current_tournament.players.keys():
             # for player in self.current_tournament.players:
                 player = self.database.players_table.get(doc_id = int(player_id))
                 self.view.print_player_details(player)
+
+            # VERSION PROPRE
+            # players_id = self.current_tournament.players.keys()
+            # entrants = self.database.players_table.get(doc_id = [1,2,3])
+            # self.view.print_player_details(entrants)
 
             self.view.press_enter()
             return self.run()

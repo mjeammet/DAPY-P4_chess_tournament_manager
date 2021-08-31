@@ -24,6 +24,24 @@ class BaseView():
 
     def print_alert(self, alert_text):
         print(alert_text)
+    
+    def print_player_details(self, unserialized_players_list):
+        """Prints a list of players."""
+        print(
+            "Prénom\t\t",
+            "Nom\t\t",
+            "Sexe\t\t",
+            "Date de naissance\t",
+            "Classement")
+        for player in unserialized_players_list:
+            player_line = f'{player["first_name"]}\t'
+            if len(player["first_name"]) < 8:
+                player_line += '\t'
+            player_line += f' {player["last_name"]}\t'
+            if len(player["last_name"]) < 7:
+                player_line += '\t'
+            player_line += f' {player["gender"]}\t\t {player["birth_date"]}\t\t {player["ranking"]}'
+            print(player_line)
 
     def press_enter(self):
         input("Retour au menu de sélection.")
@@ -33,9 +51,6 @@ class BaseView():
 
     def cancelled(self):
         print("Opération annulée.")
-
-    def print_player_details(self, players_details):
-        print(players_details)
 
     def print_tournament_details_header(self):
         print(
@@ -113,25 +128,6 @@ class PlayerHomeView(BaseView):
             "2. Par classement"
         )
         return self.get_user_choice()
-
-
-    def print_player_details(self, unserialized_players_list):
-        """Prints a list of players."""
-        print(
-            "Prénom\t\t",
-            "Nom\t\t",
-            "Sexe\t\t",
-            "Date de naissance\t",
-            "Classement")
-        for player in unserialized_players_list:
-            player_line = f'{player["first_name"]}\t'
-            if len(player["first_name"]) < 8:
-                player_line += '\t'
-            player_line += f' {player["last_name"]}\t'
-            if len(player["last_name"]) < 7:
-                player_line += '\t'
-            player_line += f' {player["gender"]}\t\t {player["birth_date"]}\t\t {player["ranking"]}'
-            print(player_line)
 
     def get_first_name(self):
         return input('Prénom :')
