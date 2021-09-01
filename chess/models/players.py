@@ -1,6 +1,5 @@
 class Player():
     """Un joueur pour le tournoi."""
-    # TODO faire un dictionnaire pour le genre
 
     def __init__(self, first_name, last_name, birth_date, gender, ranking):
         self.first_name = first_name

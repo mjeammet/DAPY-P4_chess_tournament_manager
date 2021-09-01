@@ -50,4 +50,4 @@ flake8 was used in this projet to make sure PEP 8 recommandations where followed
 
 To generate a new report : 
 
-`$ flake8 --format=html --htmldir=flake8-report --exclude env,__pycache__`
+`$ flake8 --format=html --htmldir=flake8_rapport --max-line-length 119 --exclude env,__pycache__`

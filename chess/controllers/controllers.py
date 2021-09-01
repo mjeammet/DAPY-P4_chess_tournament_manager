@@ -1,11 +1,10 @@
 import re
 from datetime import date, datetime
 from tinydb import Query
-from chess.models import Database
-from chess.models import Player, Tournament, Round, Match
 from chess import views
-from settings import VERBOSE, PLAYERS_PER_TOURNAMENT, ROUNDS_PER_TOURNAMENT
-UPDATE_DATABASE = True
+from chess.models import Player, Tournament, Round, Match, Database
+from chess.models import PLAYERS_PER_TOURNAMENT, ROUNDS_PER_TOURNAMENT
+VERBOSE = False
 
 
 class ApplicationController:
@@ -59,7 +58,7 @@ class HomeController:
             return self.run()
         elif next_action == "3":
             # Go to Tournament menu
-            return TournamentMenuController(current_tournament=None)
+            return TournamentMenuController()
         elif next_action == '4':
             # Go to Player menu
             return PlayerMenuController()
@@ -91,7 +90,7 @@ class HomeController:
             - database id of the new tournament"""
         table_name = "tournaments"
         tournament_id = self.database.add_to_database(table_name, tournament)
-        alert = f'---\n{tournament.name} succesfully added with id {tournament_id}.'
+        alert = f'---\n{tournament.name} ajouté.e à la base de données avec l\'id {tournament_id}.'
         self.view.print_alert(alert)
         return None
 
@@ -120,7 +119,7 @@ class PlayerMenuController:
             return EndController()
         else:
             self.view.notify_invalid_choice()
-            return PlayerMenuController()
+            return self.run()
 
     def list_database_players(self):
         """Lists players in database."""
@@ -224,6 +223,14 @@ class PlayerMenuController:
             self.view.type_error("integer")
             return self.get_valid_ranking()
 
+    def get_valid_player_id(self):
+        inputted_id = self.view.get_player_id()
+        try:
+            return int(inputted_id)
+        except ValueError:
+            self.view.type_error("integer")
+            return self.get_valid_player_id()
+
     def check_existing_duplicate(self, new_player_info):
         """From inputted player info, check for duplicate in the database."""
         first_name = new_player_info[0]
@@ -243,64 +250,47 @@ class PlayerMenuController:
         new_player = Player(*new_player_info)
         new_player_id = self.database.add_to_database("players", new_player)
         # new_player_id = self.database.players_table.all()[-1].doc_id
-        print(f'---\n{new_player_info[0]} {new_player_info[1]} succesfully added with id {new_player_id}.')
+        self.view.print_alert(f'---\n{new_player_info[0]} {new_player_info[1]} succesfully added with id {new_player_id}.')
         return new_player_id
-
-    def get_valid_player_id(self):
-        inputted_ranking = self.view.get_player_id()
-        try:
-            return int(inputted_ranking)
-        except ValueError:
-            self.view.type_error("integer")
-            return self.get_valid_player_id()
 
     def update_player_infos(self, player_id="", first_name="", last_name="", gender="", birth_date="", ranking=""):
         """Update a player in the database."""
 
-        player_id = self.get_valid_player_id()
+        player_id = get_valid_player_id()
         existing_player = self.database.get_db_object("players", player_id)
 
         self.view.print_player_details([existing_player])
-        # TODO peu-être remplacer les != "" par des is.valid()
-        if first_name != "":
-            print(f"changement du first_name {existing_player['first_name']} pour {first_name}")
-        else:            
-            next_action = self.view.get_player_field_to_modify()
-            # TODO convert to dictionary, please 
-            if next_action == "1":
-                updated_field = "first_name"
-            elif next_action == "2":
-                updated_field = "last_name"
-            elif next_action == "3": 
-                updated_field = "birth_date"
-            elif next_action == "4":
-                updated_field = "gender"
-            elif next_action == "5":
-                updated_field = "ranking"                
-            else:
-                self.view.print_alert("Stop trolling please.")
-                self.view.press_enter()
-                return self.run()
-            updated_info = self.view.get_updated_info()
-            self.database.players_table.update({updated_field: updated_info}, doc_ids = [player_id])
+        
+
+        next_action = self.view.get_player_field_to_modify()
+        # TODO convert to dictionary, please 
+        if next_action == "1":
+            updated_field = "first_name"
+        elif next_action == "2":
+            updated_field = "last_name"
+        elif next_action == "3": 
+            updated_field = "birth_date"
+        elif next_action == "4":
+            updated_field = "gender"
+        elif next_action == "5":
+            updated_field = "ranking"                
+        else:
+            self.view.notify_invalid_choice()
+            self.view.press_enter()
+            return self.run()
+        updated_info = self.view.get_updated_info()
+        self.database.players_table.update({updated_field: updated_info}, doc_ids = [player_id])
 
 
 class TournamentMenuController:
     """Controller for Tournament menu."""
-    def __init__(self, current_tournament):
-        self.title = "MENU DES TOURNOIS"
+    def __init__(self):
         self.view = views.TournamentHomeView()
-        self.current_tournament = current_tournament
+        self.current_tournament = None
         self.database = Database()
 
     def run(self):
-        self.view.print_header(self.title)
-        if self.current_tournament != None:
-            current_tournament_name = self.current_tournament.name
-            self.view.print_current_tournament(current_tournament_name)
-        else:
-            self.view.print_current_tournament("None")
-        self.view.render()
+        self.view.render(self.current_tournament)
         next_action = self.view.get_user_choice()
         if next_action == "1":
             # Change selected tournament
@@ -328,14 +318,15 @@ class TournamentMenuController:
             if len(self.current_tournament.players) >= PLAYERS_PER_TOURNAMENT:
                 alert = "Le tournoi est déjà plein, vous ne pouvez pas ajouter de participant.es."
                 self.view.print_alert(alert)
-            else:        
-                self.add_player_to_tournament()
+            else:
+                while len(self.current_tournament.players) != 8:
+                    self.add_player_to_tournament()
+
                 # notifies if it was the last player
-                if len(self.current_tournament.players) == PLAYERS_PER_TOURNAMENT:
-                    self.view.print_alert("8ème participant.e ajouté.e au tournoi. Le tournoi est désormais plein ! ")
+                self.view.print_alert("8ème participant.e ajouté.e au tournoi. Le tournoi est désormais plein ! ")
 
             self.view.press_enter()
-            return self.run()        
+            return self.run()
         elif next_action == "4":
             # Selected "prints rounds"
 
@@ -362,12 +353,10 @@ class TournamentMenuController:
                 self.current_tournament.rounds.append(new_round)
             else:
                 pass
-
-            if UPDATE_DATABASE:
-                serialized_rounds = [round.serialize() for round in self.current_tournament.rounds]
-                self.view.print_alert(f"Updating DB with round {serialized_rounds}")
-                # update database to include new round 
-                self.database.tournaments_table.update({"rounds": serialized_rounds}, Query().name == self.current_tournament.name)
+            
+            # Creating round in database
+            serialized_rounds = [round.serialize() for round in self.current_tournament.rounds]
+            self.database.tournaments_table.update({"rounds": serialized_rounds}, Query().name == self.current_tournament.name)
             
             return self.run()        
         elif next_action == "6":
@@ -376,9 +365,11 @@ class TournamentMenuController:
             if self.current_tournament == None:
                 self.current_tournament = self.select_current_tournament()
 
+            # TODO check if last round is finished. 
             round_to_update = self.current_tournament.rounds[-1]
             for match_to_update in round_to_update.matchs:
-                self.view.print_alert(f"updating match {match_to_update}")
+                print(match_to_update)
+                self.view.print_alert(f"Updating match {match_to_update[0][0]} contre {match_to_update[1][0]}")
                 match_index = round_to_update.matchs.index(match_to_update)
 
                 new_match = self.get_updated_match(match_to_update)
@@ -386,16 +377,16 @@ class TournamentMenuController:
                 self.current_tournament.players[str(new_match[0][0])] += new_match[0][1]
                 self.current_tournament.players[str(new_match[1][0])] += new_match[1][1]
 
-            if UPDATE_DATABASE:
-                self.update_rounds_in_database()
-                self.update_players_in_database()
+            # Updating database
+            self.update_rounds_in_database()
+            self.update_players_in_database()
 
             self.view.press_enter()
             return self.run()
         elif next_action == "7":
             # List matches
             for round in self.current_tournament.rounds:
-                print(round.matchs)
+                self.view.print_alert(round.matchs)
             return self.run()
         elif next_action == "0":
             return HomeController()
@@ -441,28 +432,26 @@ class TournamentMenuController:
     def add_player_to_tournament(self):
         """ Add a player to tournament, using their id. """
      
-        player_id = int(input("Id du joueur que vous souhaiter ajouter : "))
+        player_id = self.get_valid_player_id()
         
         # Check if player is not already registered in tournament
         if len(self.current_tournament.players) > 0:
-            if player_id in [int(player_id) for player_id in self.current_tournament.players.keys()]:
+            if str(player_id) in self.current_tournament.players.keys():
                 self.view.print_alert("Player already in tournament.")
+                return None
 
         # Making sure que le player est bien dans la DB
         db_match = self.database.players_table.get(doc_id = player_id)
         if db_match is not None:
             self.current_tournament.players[str(player_id)] = 0
             self.database.tournaments_table.update({"players": self.current_tournament.players}, Query().name == self.current_tournament.name)  
+            self.view.print_alert("Joueur ajouté.")
         else:
             self.view.id_not_found(player_id, "players")
-            
-        self.view.press_enter()
-        self.run()
 
     def create_new_round(self):   
         """Creates a new round for current tournament. """
         round_number = int(len(self.current_tournament.rounds))+1
-        print(f'Starting round number {round_number}')
 
         if round_number == 1:
             # first round, players order is based on ranking 
@@ -486,7 +475,10 @@ class TournamentMenuController:
         new_round = Round(round_name, round_starttime, round_endtime, new_round_matchs)
         self.view.print_alert(f'{new_round.name} créé le {new_round.start_datetime}.')
         return new_round 
-     
+
+    def get_valid_player_id(self):
+        return PlayerMenuController.get_valid_player_id(self)
+
     def check_ready_for_new_round(self):
 
         if len(self.current_tournament.rounds) > 0:
@@ -592,7 +584,7 @@ class TournamentMenuController:
         return met_players
 
     def get_updated_match(self, match):
-        print(match)
+        # self.view.print_alert(match)
         p1_id = match[0][0]
         p2_id = match[1][0]
         score1 = self.view.get_match_score(p1_id)
@@ -613,9 +605,9 @@ class EndController:
     def run(self):
         self.view.render()
         choice = self.view.confirm_exit()
-        if choice == "Y":
+        if choice.upper() == "Y":
             return None
-        elif choice == "N":
+        elif choice.upper() == "N":
             return HomeController()
         else:
             self.view.notify_invalid_choice()
@@ -627,9 +619,9 @@ def unserialize_object(serialized_object, type):
             object = Player(*serialized_object.values())
         elif type.lower() == "tournaments":
             object = Tournament(*serialized_object.values())
-            for round_number in range(len(object.rounds)):
-                round_as_dict = object.rounds[round_number]
-                object.rounds[round_number] = Round(*round_as_dict.values())
+            # for round_number in range(len(object.rounds)):
+            #     round_as_dict = object.rounds[round_number]
+            #     object.rounds[round_number] = Round(*round_as_dict.values())
                 # TODO make sure every match is a tuple of lists and not a list of lists
         else:
             error = f"Provided type '{type}'' is not a valid database table."

@@ -1,5 +1,5 @@
 from tinydb import TinyDB
-from settings import DATABASE_PATH, VERBOSE
+DATABASE_PATH = "./chess_database.json"
 
 class Database:
 
@@ -24,16 +24,16 @@ class Database:
             object = unserialize_object(serialized_object, table)
             return object
 
-    
     def add_to_database(self, table_name, serialized_object):
         """Add an new object to the database.
-        
-        return id of the newly added element."""
+        Arguments:
+            - (str) Table name
+            - (dictionary) serialized_object
+        Returns:
+            - (int) id of the newly added element."""
         table = self.database.table(table_name)
         table.insert(vars(serialized_object))
-        if VERBOSE:           
-            print(f'    {serialized_object} ajouté.e à la base de données.')
-        return table.all()[-1].doc_id
+        return int(table.all()[-1].doc_id)
 
     def empty_database_table(self, table_name, force = False):
         table = self.table(table_name)
@@ -46,9 +46,4 @@ class Database:
             table.truncate()
             return None
 
-    """ def database_verification():
-        for tables:
-            for object:
-                for field:
-                    # check type
-                    pass """
+    # TODO ajouter une fonction qui vérifie tous les éléments de la base de données

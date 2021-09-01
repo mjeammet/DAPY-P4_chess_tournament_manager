@@ -1,6 +1,3 @@
-from chess.models import tournament
-
-
 class BaseView():
     @staticmethod
     def render():
@@ -14,8 +11,9 @@ class BaseView():
 
     def get_user_tournament_choice(self):
         return input('\nVeuillez entrer l\'id d\'un tournoi existant ? ')
-        
-    def print_header(self, title):
+    
+    @staticmethod
+    def print_header(title):
         print(
             "\n|========================================|\n"
             f"|\t\t{title}\t\t|\n"
@@ -33,18 +31,19 @@ class BaseView():
             "Sexe\t\t",
             "Date de naissance\t",
             "Classement")
-        for player in unserialized_players_list:
-            player_line = f'{player["first_name"]}\t'
-            if len(player["first_name"]) < 8:
-                player_line += '\t'
-            player_line += f' {player["last_name"]}\t'
-            if len(player["last_name"]) < 7:
-                player_line += '\t'
-            player_line += f' {player["gender"]}\t\t {player["birth_date"]}\t\t {player["ranking"]}'
-            print(player_line)
-            return None
         if unserialized_players_list == []:
-            print("Aucun joueur à afficher.")
+            print("- Aucun joueur à afficher -")
+        else:
+            for player in unserialized_players_list:
+                player_line = f'{player["first_name"]}\t'
+                if len(player["first_name"]) < 8:
+                    player_line += '\t'
+                player_line += f' {player["last_name"]}\t'
+                if len(player["last_name"]) < 7:
+                    player_line += '\t'
+                player_line += f' {player["gender"]}\t\t {player["birth_date"]}\t\t {player["ranking"]}'
+                print(player_line)
+        return None
 
     def press_enter(self):
         input("Retour au menu de sélection.")
@@ -64,6 +63,10 @@ class BaseView():
             "Tour joués\t"
             "Gagnant.e.s"
         )
+    
+    @staticmethod
+    def get_player_id():
+        return input("Id du joueur : ")
 
     def print_tournament_details(self, tournament_details):
         # print(tournament_details)
@@ -161,9 +164,6 @@ class PlayerHomeView(BaseView):
             "2. Ajouter quand même un nouveau joueur.\n"
             "3. Annuler l'ajout.\n"            
         )
-
-    def get_player_id(self):
-        return input("Id du joueur : ")
             
     def get_player_field_to_modify(self):
         print(
@@ -183,10 +183,14 @@ class PlayerHomeView(BaseView):
 
 class TournamentHomeView(BaseView):
 
-    @staticmethod
-    def render(current_tournament = None):
+    def render(self, current_tournament):
+        self.print_header("MENU DES TOURNOIS")
+        if current_tournament != None:
+            print(f'Current tournament : {current_tournament.name}\n')
+        else:
+            print(f'Current tournament : None\n')
         print(
-            "1. Changer de tournoi sélectionné.\n"
+            "1. Sélectionner un tournoi / changer de tournoi sélectionné.\n"
             "2. Lister les joueurs du tournoi.\n"
             "3. Ajouter un joueur au tournoi.\n"
             "4. Lister les tours du tournoi.\n"
@@ -196,9 +200,6 @@ class TournamentHomeView(BaseView):
             "0. Retour au menu principal.\n"
             "9. Quitter le programme."
         ) 
-
-    def print_current_tournament(self, tournament_name):
-        print(f'Current tournament : {tournament_name}\n')
 
     def print_round_header(self):
         print("Nom\t   Date_debut\t\t\t Date_fin  Match1    Match2  Match3  Match4")
