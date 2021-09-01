@@ -246,51 +246,42 @@ class PlayerMenuController:
         print(f'---\n{new_player_info[0]} {new_player_info[1]} succesfully added with id {new_player_id}.')
         return new_player_id
 
+    def get_valid_player_id(self):
+        inputted_ranking = self.view.get_player_id()
+        try:
+            return int(inputted_ranking)
+        except ValueError:
+            self.view.type_error("integer")
+            return self.get_valid_player_id()
+
     def update_player_infos(self, player_id="", first_name="", last_name="", gender="", birth_date="", ranking=""):
         """Update a player in the database."""
 
-        if type(player_id) != int:
-            player_id = int(input("Id du joueur que vous souhaitez modifier ? "))
-            existing_player = self.database.get_db_object("players", player_id)
+        player_id = self.get_valid_player_id()
+        existing_player = self.database.get_db_object("players", player_id)
 
-        print(f"Updating player {player_id}:\n")
+        self.view.print_player_details([existing_player])
         # TODO peu-être remplacer les != "" par des is.valid()
         if first_name != "":
             print(f"changement du first_name {existing_player['first_name']} pour {first_name}")
-        else:
-            print(
-                'Veuillez entrer sélectionner le champ à modifier:\n'
-                "1. Prénom\n"
-                "2. Nom de famille.\n"
-                "3. Genre\n"
-                "4. Date de naissance\n"
-                "5. Classement.\n"
-                "0 pour annuler la modification.\n"        
-            ) 
-            next_action = int(input("Quel champ souhaitez-vous modifier ? "))
-            if next_action == 1:
+        else:            
+            next_action = self.view.get_player_field_to_modify()
+            # TODO convert to dictionary, please 
+            if next_action == "1":
                 updated_field = "first_name"
-                print(f"L'entrée actuelle est : {existing_player[updated_field]}")
-                updated_info = input("Veuillez entrer le nouveau prénom : ")
-            elif next_action == 2:
+            elif next_action == "2":
                 updated_field = "last_name"
-                print(f"L'entrée actuelle est : {existing_player[updated_field]}")
-                updated_info = input("Veuillez entrer le nouveau nom : ")
-            elif next_action == 3: 
+            elif next_action == "3": 
                 updated_field = "birth_date"
-                print(f"L'entrée actuelle est : {existing_player[updated_field]}")
-                updated_info = input("Veuillez entrer la nouvelle date de naissance : ")
-            elif next_action == 4:
+            elif next_action == "4":
                 updated_field = "gender"
-                print(f"L'entrée actuelle est : {existing_player[updated_field]}")
-                updated_info = input("Veuillez entrer le nouveau genre : ")            
-            elif next_action == 5:
-                updated_field = "ranking"
-                print(f"L'entrée actuelle est : {existing_player[updated_field]}")
-                updated_info = input("Veuillez entrer le nouveau classement : ")
+            elif next_action == "5":
+                updated_field = "ranking"                
             else:
-                print("Stop trolling please.")
-                return PlayerMenuController()
+                self.view.print_alert("Stop trolling please.")
+                self.view.press_enter()
+                return self.run()
+            updated_info = self.view.get_updated_info()
             self.database.players_table.update({updated_field: updated_info}, doc_ids = [player_id])
 
 
@@ -311,26 +302,24 @@ class TournamentMenuController:
             self.view.print_current_tournament("None")
         self.view.render()
         next_action = self.view.get_user_choice()
-
         if next_action == "1":
+            # Change selected tournament
+            self.current_tournament = self.select_current_tournament()
+            return self.run()
+        elif next_action == "2":
             # Selected "prints entrants"
             if self.current_tournament == None:
                 self.current_tournament = self.select_current_tournament()
            
-            # Done by list comprehension instead of query logic https://github.com/msiemens/tinydb/issues/293
+            # Browse and print entrants infos
+            entrants_infos = [] 
             for player_id in self.current_tournament.players.keys():
-            # for player in self.current_tournament.players:
-                player = self.database.players_table.get(doc_id = int(player_id))
-                self.view.print_player_details(player)
-
-            # VERSION PROPRE
-            # players_id = self.current_tournament.players.keys()
-            # entrants = self.database.players_table.get(doc_id = [1,2,3])
-            # self.view.print_player_details(entrants)
+                entrants_infos.append(self.database.players_table.get(doc_id = int(player_id)))
+            self.view.print_player_details(entrants_infos)
 
             self.view.press_enter()
             return self.run()
-        if next_action == "2":
+        if next_action == "3":
             # Adds a player to the selected tournament
             
             if self.current_tournament == None:
@@ -347,7 +336,7 @@ class TournamentMenuController:
 
             self.view.press_enter()
             return self.run()        
-        elif next_action == "3":
+        elif next_action == "4":
             # Selected "prints rounds"
 
             if self.current_tournament is None:
@@ -363,7 +352,7 @@ class TournamentMenuController:
 
             self.view.press_enter()
             return self.run()
-        elif next_action == "4":
+        elif next_action == "5":
             # Selected "New round"
             if self.current_tournament is None:
                 self.current_tournament = self.select_current_tournament()
@@ -376,12 +365,12 @@ class TournamentMenuController:
 
             if UPDATE_DATABASE:
                 serialized_rounds = [round.serialize() for round in self.current_tournament.rounds]
-                print(f"Updating DB with round {serialized_rounds}")
+                self.view.print_alert(f"Updating DB with round {serialized_rounds}")
                 # update database to include new round 
                 self.database.tournaments_table.update({"rounds": serialized_rounds}, Query().name == self.current_tournament.name)
             
             return self.run()        
-        elif next_action == "5":
+        elif next_action == "6":
             # Selected "update round"
 
             if self.current_tournament == None:
@@ -403,15 +392,10 @@ class TournamentMenuController:
 
             self.view.press_enter()
             return self.run()
-        elif next_action == "6":
+        elif next_action == "7":
             # List matches
             for round in self.current_tournament.rounds:
                 print(round.matchs)
-            return self.run()
-        elif next_action == "7":
-            # Change selected tournament
-            selected_tournament = self.select_current_tournament()
-            self.current_tournament = selected_tournament
             return self.run()
         elif next_action == "0":
             return HomeController()
@@ -422,7 +406,7 @@ class TournamentMenuController:
             return self.run()
 
     def update_players_in_database(self):
-        print(self.current_tournament.players)
+        self.view.print_alert(self.current_tournament.players)
         self.database.tournaments_table.update({"players": self.current_tournament.players}, Query().name == self.current_tournament.name)
 
     def update_rounds_in_database(self):
@@ -448,7 +432,7 @@ class TournamentMenuController:
         #unserialize_tournament()
         tournament = unserialize_object(serialized_tournament, type="tournaments")
         name = tournament.name
-        print(f"Tournoi {name} sélectionné comme tournoi en cours.")
+        self.view.print_alert(f"Tournoi {name} sélectionné comme tournoi en cours.")
         return tournament
 
     def get_current_tournament_object(self):
@@ -462,15 +446,12 @@ class TournamentMenuController:
         # Check if player is not already registered in tournament
         if len(self.current_tournament.players) > 0:
             if player_id in [int(player_id) for player_id in self.current_tournament.players.keys()]:
-                print("Player already in tournament.")
+                self.view.print_alert("Player already in tournament.")
 
         # Making sure que le player est bien dans la DB
         db_match = self.database.players_table.get(doc_id = player_id)
-        print(db_match)
         if db_match is not None:
             self.current_tournament.players[str(player_id)] = 0
-            # if VERBOSE: 
-            #     print(f'    {player["first_name"]} ajouté.e au tournoi')
             self.database.tournaments_table.update({"players": self.current_tournament.players}, Query().name == self.current_tournament.name)  
         else:
             self.view.id_not_found(player_id, "players")

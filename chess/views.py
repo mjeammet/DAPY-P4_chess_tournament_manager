@@ -42,6 +42,9 @@ class BaseView():
                 player_line += '\t'
             player_line += f' {player["gender"]}\t\t {player["birth_date"]}\t\t {player["ranking"]}'
             print(player_line)
+            return None
+        if unserialized_players_list == []:
+            print("Aucun joueur à afficher.")
 
     def press_enter(self):
         input("Retour au menu de sélection.")
@@ -159,20 +162,37 @@ class PlayerHomeView(BaseView):
             "3. Annuler l'ajout.\n"            
         )
 
+    def get_player_id(self):
+        return input("Id du joueur : ")
+            
+    def get_player_field_to_modify(self):
+        print(
+            "\n"
+            "1. Prénom\n"
+            "2. Nom de famille.\n"
+            "3. Genre\n"
+            "4. Date de naissance\n"
+            "5. Classement.\n"
+            "0 pour annuler la modification.\n"
+            ) 
+        return input("Quel champ souhaitez-vous modifier ? ")
+
+    def get_updated_info(self):
+        return input(f"Veuillez entrer la nouvelle valeur : ")
+
+
 class TournamentHomeView(BaseView):
 
     @staticmethod
     def render(current_tournament = None):
         print(
-            "1. Lister les joueurs du tournoi.\n"
-            "2. Ajouter un joueur au tournoi.\n"
-            "---\n"
-            "3. Lister les tours du tournoi.\n"
-            "4. Commencer un nouveau tour de jeu.\n"
-            "5. Entrer les résultats du round non terminé.\n"
-            "6. Lister les matchs du tournoi.\n"
-            "---\n"
-            "7. Changer de tournoi sélectionné.\n"
+            "1. Changer de tournoi sélectionné.\n"
+            "2. Lister les joueurs du tournoi.\n"
+            "3. Ajouter un joueur au tournoi.\n"
+            "4. Lister les tours du tournoi.\n"
+            "5. Commencer un nouveau tour de jeu.\n"
+            "6. Entrer les résultats du round non terminé.\n"
+            "7. Lister les matchs du tournoi.\n"
             "0. Retour au menu principal.\n"
             "9. Quitter le programme."
         ) 
@@ -185,7 +205,7 @@ class TournamentHomeView(BaseView):
 
     def print_round_details(self, round):
         details = (
-            f'{round.name}    '    
+            f'{round.name}    '
             f'{round.start_datetime}    '
             f'{round.end_datetime}    '
             f'{str(round.matchs[0])}    '
@@ -207,7 +227,7 @@ class TournamentHomeView(BaseView):
             print(f'Score must be 0, 1 or 0.5. Cannot be {inputted_score}')
             return self.get_match_score()
         
-        return inputted_score       
+        return inputted_score
 
 class EndView(BaseView):
     """Vue responsable de l'affichage de menu de fin d'application."""
