@@ -1,16 +1,13 @@
 # Chess tournaments manager
 
-Marie Jeammet - v1.0 - 2021/08
-marie.jeammet@protonmail.com
+Marie Jeammet - v1.0 - 2021/08.
+Contact : marie.jeammet@protonmail.com
 
 ## Context
 
 Offline tool for tournaments management. Answers to commandline input. 
 
-Technologies
-
-This project using Python 3.6.9
-and tinydb version 4.5.1
+This project using Python 3.6.9 and tinydb version 4.5.1
 
 ## Installation
 ### Cloning the project
