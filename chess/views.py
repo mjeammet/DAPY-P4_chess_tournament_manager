@@ -1,3 +1,6 @@
+from chess.models import players
+
+
 class BaseView():
     @staticmethod
     def render():
@@ -202,18 +205,15 @@ class TournamentHomeView(BaseView):
         ) 
 
     def print_round_header(self):
-        print("Nom\t   Date_debut\t\t\t Date_fin  Match1    Match2  Match3  Match4")
+        print("Nom\t   Date_debut\t\t\t Date_fin\t\t       Match 1\t\t\tMatch 2\t\t\tMatch 3\t\t\tMatch 4")
 
     def print_round_details(self, round):
         details = (
             f'{round.name}    '
             f'{round.start_datetime}    '
-            f'{round.end_datetime}    '
-            f'{str(round.matchs[0])}    '
-            f'{str(round.matchs[1])}    '
-            f'{str(round.matchs[2])}    '
-            f'{str(round.matchs[3])}    '
-        )
+            f'{round.end_datetime}    ')
+        for round in round.matchs:
+            details += f'{round[0][0]} ({round[0][1]}) vs {round[1][0]} ({round[1][1]})\t'
         print(details)
         return None
 
@@ -229,6 +229,12 @@ class TournamentHomeView(BaseView):
             return self.get_match_score()
         
         return inputted_score
+
+    @staticmethod
+    def print_round_ended(round):
+        round_name = round.name
+        end_date = round.end_datetime
+        print(f'{round_name} terminé {end_date}.')
 
 class EndView(BaseView):
     """Vue responsable de l'affichage de menu de fin d'application."""

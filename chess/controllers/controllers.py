@@ -292,15 +292,14 @@ class TournamentMenuController:
     def run(self):
         self.view.render(self.current_tournament)
         next_action = self.view.get_user_choice()
+        if next_action in ["2","3","4","5","6","7"]:
+            if self.current_tournament == None:
+                self.current_tournament = self.select_current_tournament()
         if next_action == "1":
             # Change selected tournament
             self.current_tournament = self.select_current_tournament()
             return self.run()
         elif next_action == "2":
-            # Selected "prints entrants"
-            if self.current_tournament == None:
-                self.current_tournament = self.select_current_tournament()
-           
             # Browse and print entrants infos
             entrants_infos = [] 
             for player_id in self.current_tournament.players.keys():
@@ -310,11 +309,7 @@ class TournamentMenuController:
             self.view.press_enter()
             return self.run()
         if next_action == "3":
-            # Adds a player to the selected tournament
-            
-            if self.current_tournament == None:
-                self.current_tournament = self.select_current_tournament()
-            
+            # Selected add players to tournament        
             if len(self.current_tournament.players) >= PLAYERS_PER_TOURNAMENT:
                 alert = "Le tournoi est déjà plein, vous ne pouvez pas ajouter de participant.es."
                 self.view.print_alert(alert)
@@ -330,53 +325,46 @@ class TournamentMenuController:
         elif next_action == "4":
             # Selected "prints rounds"
 
-            if self.current_tournament is None:
-                self.current_tournament = self.select_current_tournament()
-
             # Prints header and round infos
-            if len(self.current_tournament.rounds) > 0:
-                self.view.print_round_header()
-                for round in self.current_tournament.rounds:
-                    self.view.print_round_details(round)
-            else: 
-                self.view.print_alert("Aucun round à afficher.")
+            self.show_rounds_details()            
 
             self.view.press_enter()
             return self.run()
         elif next_action == "5":
             # Selected "New round"
-            if self.current_tournament is None:
-                self.current_tournament = self.select_current_tournament()
 
             if self.check_ready_for_new_round():
                 new_round = self.create_new_round()
                 self.current_tournament.rounds.append(new_round)
+
+                # Creating round in database
+                serialized_rounds = [round.serialize() for round in self.current_tournament.rounds]
+                self.database.tournaments_table.update({"rounds": serialized_rounds}, Query().name == self.current_tournament.name)
             else:
-                pass
+                self.view.print_alert("Le tour précédent attend encore des résultats.")
             
-            # Creating round in database
-            serialized_rounds = [round.serialize() for round in self.current_tournament.rounds]
-            self.database.tournaments_table.update({"rounds": serialized_rounds}, Query().name == self.current_tournament.name)
-            
+            self.view.press_enter()
             return self.run()        
         elif next_action == "6":
-            # Selected "update round"
-
-            if self.current_tournament == None:
-                self.current_tournament = self.select_current_tournament()
+            # Updatting round
 
             # TODO check if last round is finished. 
             round_to_update = self.current_tournament.rounds[-1]
             for match_to_update in round_to_update.matchs:
-                print(match_to_update)
+                # print(match_to_update)
                 self.view.print_alert(f"Updating match {match_to_update[0][0]} contre {match_to_update[1][0]}")
                 match_index = round_to_update.matchs.index(match_to_update)
 
                 new_match = self.get_updated_match(match_to_update)
                 self.current_tournament.rounds[-1].matchs[match_index] = new_match
+                self.current_tournament.rounds[-1].end_datetime = str(datetime.today())
+
+                # Updating players scores
                 self.current_tournament.players[str(new_match[0][0])] += new_match[0][1]
                 self.current_tournament.players[str(new_match[1][0])] += new_match[1][1]
 
+            
+            self.view.print_round_ended(self.current_tournament.rounds[-1])
             # Updating database
             self.update_rounds_in_database()
             self.update_players_in_database()
@@ -387,6 +375,8 @@ class TournamentMenuController:
             # List matches
             for round in self.current_tournament.rounds:
                 self.view.print_alert(round.matchs)
+            
+            self.view.press_enter()
             return self.run()
         elif next_action == "0":
             return HomeController()
@@ -396,8 +386,17 @@ class TournamentMenuController:
             self.view.notify_invalid_choice()
             return self.run()
 
+    def show_rounds_details(self):
+        if len(self.current_tournament.rounds) > 0:
+                self.view.print_round_header()
+                for round in self.current_tournament.rounds:
+                    self.view.print_round_details(round)
+        else: 
+            self.view.print_alert("Aucun round à afficher.")
+
     def update_players_in_database(self):
-        self.view.print_alert(self.current_tournament.players)
+        """Update players dictionary in the database"""
+        # self.view.print_alert(self.current_tournament.players)
         self.database.tournaments_table.update({"players": self.current_tournament.players}, Query().name == self.current_tournament.name)
 
     def update_rounds_in_database(self):
@@ -468,7 +467,7 @@ class TournamentMenuController:
             new_round_matchs.append(new_match)
 
         # New round infos
-        round_name = f'Round_{round_number}'
+        round_name = f'Round {round_number}'
         round_starttime = str(datetime.today())
         round_endtime = None
         
@@ -484,7 +483,6 @@ class TournamentMenuController:
         if len(self.current_tournament.rounds) > 0:
             for match in self.current_tournament.rounds[-1].matchs:
                 if match[0][1] == 0 and match[1][1] == 0:
-                    self.view.print_alert("Le tour précédent attend encore des résultats.")
                     return False
 
         if len(self.current_tournament.players) != PLAYERS_PER_TOURNAMENT:
@@ -562,7 +560,7 @@ class TournamentMenuController:
 
     def first_unmet_partner(self, player_to_match, list_of_candidates):        
         met_players = self.get_previously_met_players(player_to_match)
-        print(f"    Matching for {player_to_match}, who already met {met_players}")
+        # print(f"    Matching for {player_to_match}, who already met {met_players}")
         for candidate in list_of_candidates:
             if candidate not in met_players:
                 return candidate
@@ -584,14 +582,12 @@ class TournamentMenuController:
         return met_players
 
     def get_updated_match(self, match):
-        # self.view.print_alert(match)
         p1_id = match[0][0]
         p2_id = match[1][0]
         score1 = self.view.get_match_score(p1_id)
         score2 = self.view.get_match_score(p2_id)
         if score1 + score2 == 1:
             new_match = Match(([p1_id, score1], [p2_id, score2]))
-            # TODO modifier l'entrant 
             return new_match
         else:
             return None
@@ -619,10 +615,6 @@ def unserialize_object(serialized_object, type):
             object = Player(*serialized_object.values())
         elif type.lower() == "tournaments":
             object = Tournament(*serialized_object.values())
-            # for round_number in range(len(object.rounds)):
-            #     round_as_dict = object.rounds[round_number]
-            #     object.rounds[round_number] = Round(*round_as_dict.values())
-                # TODO make sure every match is a tuple of lists and not a list of lists
         else:
             error = f"Provided type '{type}'' is not a valid database table."
             raise error

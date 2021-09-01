@@ -34,13 +34,12 @@ class Tournament:
 class Round:
     """ Un tour de jeu. """
 
-    def __init__(self, turn_name, start_datetime, end_datetime, matchs): 
+    def __init__(self, turn_name, start_datetime, end_datetime, matchs):
+        """Initialize a round."""
         self.name = turn_name
         self.start_datetime = start_datetime
         self.end_datetime = end_datetime
-        print(matchs)
         self.matchs = [Match(match) for match in matchs]
-        print(self.matchs)
 
     def mark_as_finished(self, end_datetime):
         """Mark round as finished, sets endtime and calls for an update of match results."""
@@ -49,7 +48,6 @@ class Round:
 
         for match in self.matchs:
             match.update_results(1,0)
-
         return True
 
     def serialize(self):
