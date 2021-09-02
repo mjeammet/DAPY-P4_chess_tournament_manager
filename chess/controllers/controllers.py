@@ -3,7 +3,7 @@ from datetime import date, datetime
 from tinydb import Query
 from chess import views
 from chess.models import Player, Tournament, Round, Match, Database
-from chess.models import PLAYERS_PER_TOURNAMENT, ROUNDS_PER_TOURNAMENT
+from chess.models import PLAYERS_PER_TOURNAMENT, ROUNDS_PER_TOURNAMENT, TIME_CONTROL_TYPE
 VERBOSE = False
 
 
@@ -77,12 +77,28 @@ class HomeController:
         Returns:
             - A list containing collected data"""
         # TODO récupérer la liste des champs avec "signature(Tournament)" ?
-        name = self.view.get_name()
-        location = self.view.get_location()
-        date = self.view.get_date()
+        name = self.get_valid_tournament_name()
+        location = self.get_valid_location()
+        date = self.get_valid_date()
         time_control = self.view.get_time_control()
         description = self.view.get_description()
         return [name, location, date, [], {}, time_control, description]
+
+    def get_valid_tournament_name(self):
+        return self.view.get_name()
+    
+    def get_valid_location(self):
+        return self.view.get_location()
+
+    def get_valid_date(self):
+        return self.view.get_date()
+    
+    def get_valid_time_control(self):
+        time_control = self.view.get_time_control()
+        if time_control in TIME_CONTROL_TYPE:
+            return time_control
+        else:
+            self.view.print_alert("Time control doit être \"bullet\" ou \"blitz\" ou \"rapide\"")
 
     def add_new_tournament_to_database(self, tournament):
         """Add a new tournament to the database.
@@ -107,12 +123,17 @@ class PlayerMenuController:
         self.view.render()
         next_action = self.view.get_user_choice()
         if next_action == '1':
+            # Lists all players in database
             all_players = self.database.players_table.all()
             self.list_players(all_players)
             self.view.press_enter()
             return self.run()
         elif next_action == '2':
-            self.get_new_player_info()
+            # Create new player and add them to the database
+            new_player = self.create_new_player()
+            new_player_id = self.database.add_to_database("players", new_player)
+            self.view.print_alert(f'---\n{new_player.first_name} {new_player.last_name} succesfully added with id {new_player_id}.')
+            self.view.press_enter
             return self.run()
         elif next_action == "3":
             self.update_player_infos()
@@ -144,27 +165,13 @@ class PlayerMenuController:
         # Collecting player info
         first_name = self.get_valid_first_name()
         last_name = self.get_valid_last_name()
+        if first_name is None or last_name is None:
+            self.view.cancelled()
+            return None
         birth_date = self.get_valid_birth_date()
         gender = self.get_valid_gender()
         ranking = self.get_valid_ranking()
-        new_player_info = [first_name, last_name, birth_date, gender, ranking]
-
-        # TODO transformer en une fonction search_player() qui servira aussi à aller update les infos du player        
-        existing_duplicate = self.check_existing_duplicate(new_player_info)
-        if existing_duplicate != []:
-            self.view.print_duplicate_alert(new_player_info, existing_duplicate)
-            next_action = self.view.get_user_choice()
-            if next_action == '1':
-                self.update_player_infos()
-            elif next_action == "2":
-                self.add_player_to_database(new_player_info)
-            elif next_action == "3":
-                self.view.cancelled()
-            else:
-                self.view.notify_invalid_choice()                
-        else:
-            self.add_player_to_database(new_player_info)
-            return None            
+        return [first_name, last_name, birth_date, gender, ranking]
 
     def get_valid_first_name(self):
         """Get valid first_name from user.
@@ -173,10 +180,12 @@ class PlayerMenuController:
         Returns:
             - a validated string."""
         inputted_name = self.view.get_first_name()
-        if re.fullmatch("[A-Za-z\-]*", inputted_name): 
+        if inputted_name == "":
+            return None
+        elif re.fullmatch("[A-Za-z\-]*", inputted_name): 
             return inputted_name
         else:
-            self.view.print_alert("Le prénom doit être uniquement constitué de lettres.")
+            self.view.print_alert("Le prénom ne peut pas être vide et doit être uniquement constitué de lettres.")
             return self.get_valid_first_name()
     
     def get_valid_last_name(self):
@@ -186,7 +195,9 @@ class PlayerMenuController:
         Returns:
             - a validated string."""
         inputted_name = self.view.get_last_name()
-        if re.fullmatch("[A-Za-z\s]*", inputted_name): 
+        if inputted_name == "":
+            return None
+        elif re.fullmatch("[A-Za-z\s]*", inputted_name): 
             return inputted_name
         else:
             self.view.print_alert("Le nom de famille doit être uniquement constitué de lettres (ou de \"-\").")
@@ -239,24 +250,31 @@ class PlayerMenuController:
         return self.database.players_table.search(
             (Query().first_name == first_name) & (Query().last_name == last_name))
     
-    def add_player_to_database(self, new_player_info):
+    def create_new_player(self):
         """Add a player to the database.
-        
-        Args:
-            - new player informations (see Player model).
-
         Returns:
-            - new player id
+            - A new instance of Player class
         """
-        new_player = Player(*new_player_info)
-        new_player_id = self.database.add_to_database("players", new_player)
-        # new_player_id = self.database.players_table.all()[-1].doc_id
-        self.view.print_alert(f'---\n{new_player_info[0]} {new_player_info[1]} succesfully added with id {new_player_id}.')
-        return new_player_id
+        new_player_data = self.get_new_player_info()            
+        existing_duplicate = self.check_existing_duplicate(new_player_data)
+        # TODO transformer en une fonction search_player() qui servira aussi à aller update les infos du player
+        if existing_duplicate != []:
+            self.view.print_duplicate_alert(new_player_data, existing_duplicate)
+            next_action = self.view.get_user_choice()
+            if next_action == '1':
+                self.update_player_infos()
+            elif next_action == "2":
+                self.add_player_to_database(new_player_data)
+            elif next_action == "3":
+                self.view.cancelled()
+            else:
+                self.view.notify_invalid_choice()
+        else:
+            new_player = Player(*new_player_data)
+        return new_player
 
     def update_player_infos(self, player_id="", first_name="", last_name="", gender="", birth_date="", ranking=""):
         """Update a player in the database."""
-
         player_id = self.get_valid_player_id()
         existing_player = self.database.get_db_object(player_id, "players")
 
@@ -613,7 +631,9 @@ class TournamentMenuController:
             return object
         except AttributeError:
             error_message = "Object provided is not valid."
+            self.view.print_alert(error_message)
             return None
+
 
 class EndController:
     """Controller handling app closure."""

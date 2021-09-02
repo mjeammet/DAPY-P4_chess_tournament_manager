@@ -1,6 +1,3 @@
-from chess.models import players
-
-
 class BaseView():
     @staticmethod
     def render():
@@ -14,7 +11,7 @@ class BaseView():
 
     def get_user_tournament_choice(self):
         return input('\nVeuillez entrer l\'id d\'un tournoi existant ? ')
-    
+
     @staticmethod
     def print_header(title):
         bars = "|==========" + "=" * len(title) + "==========|"
@@ -26,7 +23,7 @@ class BaseView():
 
     def print_alert(self, alert_text):
         print(alert_text)
-    
+
     def print_player_details(self, unserialized_players_list):
         """Prints a list of players."""
         print(
@@ -74,7 +71,7 @@ class BaseView():
             "2. Par classement"
         )
         return self.get_user_choice()
-    
+
     @staticmethod
     def get_player_id():
         return input("Id du joueur : ")
@@ -183,7 +180,7 @@ class PlayerHomeView(BaseView):
         return input("Quel champ souhaitez-vous modifier ? ")
 
     def get_updated_info(self):
-        return input(f"Veuillez entrer la nouvelle valeur : ")
+        return input("Veuillez entrer la nouvelle valeur : ")
 
 
 class TournamentHomeView(BaseView):
@@ -193,7 +190,7 @@ class TournamentHomeView(BaseView):
         if current_tournament != None:
             print(f'Current tournament : {current_tournament.name}\n')
         else:
-            print(f'Current tournament : None\n')
+            print('Current tournament : None\n')
         print(
             "1. Sélectionner un tournoi / changer de tournoi sélectionné.\n"            
             "2. Ajouter des joueurs au tournoi.\n"

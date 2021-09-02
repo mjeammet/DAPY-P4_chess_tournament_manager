@@ -1,6 +1,7 @@
 from tinydb import TinyDB
 DATABASE_PATH = "./chess_database.json"
 
+
 class Database:
 
     def __init__(self):
@@ -11,7 +12,7 @@ class Database:
 
     def get_db_object(self, object_id, table):
         """Retrieve an objet, using its id """
-        return self.database.table(table).get(doc_id = int(object_id))
+        return self.database.table(table).get(doc_id=int(object_id))
 
     def add_to_database(self, table_name, serialized_object):
         """Add an new object to the database.
@@ -22,7 +23,8 @@ class Database:
             - (int) id of the newly added element."""
         table = self.database.table(table_name)
         table.insert(vars(serialized_object))
-        return int(table.all()[-1].doc_id)
+        doc_id = int(table.all()[-1].doc_id)
+        return doc_id
 
     def empty_database_table(self, table_name):
         table = self.table(table_name)

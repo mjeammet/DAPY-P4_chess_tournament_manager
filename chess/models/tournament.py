@@ -1,11 +1,12 @@
 PLAYERS_PER_TOURNAMENT = 8
 ROUNDS_PER_TOURNAMENT = 4
 
-TIME_CONTROL_TYPE = (
-    "bullet"
-    "blitz"
+TIME_CONTROL_TYPE = [
+    "bullet",
+    "blitz",
     "fast"
-)
+]
+
 
 class Tournament:
     """Un tournoi
@@ -15,7 +16,11 @@ class Tournament:
         self.name = name
         self.location = location
         self.date = date
-        self.rounds = [Round(round_info['name'], round_info['start_datetime'], round_info['end_datetime'], round_info['matchs']) for round_info in rounds]
+        self.rounds = [Round(
+            round_info['name'],
+            round_info['start_datetime'],
+            round_info['end_datetime'],
+            round_info['matchs']) for round_info in rounds]
         self.players = players
         self.time_control = time_control
         self.description = description
@@ -30,6 +35,7 @@ class Tournament:
         composition['rounds'] = [round for round in self.rounds]
         # composition['matchs'] = [str(match_) for match_ in self.matchs]
         return composition
+
 
 class Round:
     """ Un tour de jeu. """
@@ -47,7 +53,7 @@ class Round:
         self.is_finished = True
 
         for match in self.matchs:
-            match.update_results(1,0)
+            match.update_results(1, 0)
         return True
 
     def serialize(self):
@@ -60,6 +66,7 @@ class Round:
 
     def __repr__(self):
         return self.__str__()
+
 
 class Match(tuple):
 
