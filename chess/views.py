@@ -17,10 +17,11 @@ class BaseView():
     
     @staticmethod
     def print_header(title):
+        bars = "|==========" + "=" * len(title) + "==========|"
         print(
-            "\n|========================================|\n"
-            f"|\t\t{title}\t\t|\n"
-            "|========================================|"
+            f"\n{bars}\n"
+            f"|          {title}          |\n"
+            f"{bars}"
         )
 
     def print_alert(self, alert_text):
@@ -66,6 +67,13 @@ class BaseView():
             "Tour joués\t"
             "Gagnant.e.s"
         )
+
+    def get_sorting_parameter(self):
+        print(
+            "1. Par nom de famille\n"
+            "2. Par classement"
+        )
+        return self.get_user_choice()
     
     @staticmethod
     def get_player_id():
@@ -119,6 +127,7 @@ class HomeView(BaseView):
     def get_description(self):
         return input("(optional) Description : ")
 
+
 class PlayerHomeView(BaseView):
 
     def render(self):
@@ -130,13 +139,6 @@ class PlayerHomeView(BaseView):
             "0. Retour au menu principal.\n"
             "9. Quitter le programme.\n"
         )
-
-    def get_sorting_parameter(self):
-        print(
-            "1. Par nom de famille\n"
-            "2. Par classement"
-        )
-        return self.get_user_choice()
 
     def get_first_name(self):
         return input('Prénom :')
@@ -193,19 +195,19 @@ class TournamentHomeView(BaseView):
         else:
             print(f'Current tournament : None\n')
         print(
-            "1. Sélectionner un tournoi / changer de tournoi sélectionné.\n"
-            "2. Lister les joueurs du tournoi.\n"
-            "3. Ajouter un joueur au tournoi.\n"
-            "4. Lister les tours du tournoi.\n"
-            "5. Commencer un nouveau tour de jeu.\n"
-            "6. Entrer les résultats du round non terminé.\n"
+            "1. Sélectionner un tournoi / changer de tournoi sélectionné.\n"            
+            "2. Ajouter des joueurs au tournoi.\n"
+            "3. Commencer un nouveau tour de jeu.\n"
+            "4. Entrer les résultats d'un tour non terminé.\n"            
+            "5. Lister les joueurs du tournoi.\n"
+            "6. Lister les tours du tournoi.\n"
             "7. Lister les matchs du tournoi.\n"
             "0. Retour au menu principal.\n"
             "9. Quitter le programme."
         ) 
 
     def print_round_header(self):
-        print("Nom\t   Date_debut\t\t\t Date_fin\t\t       Match 1\t\t\tMatch 2\t\t\tMatch 3\t\t\tMatch 4")
+        print("Nom\t   Date de debut\t\t Date de fin\t\t       Match 1\t\t\tMatch 2\t\t\tMatch 3\t\t\tMatch 4")
 
     def print_round_details(self, round):
         details = (
