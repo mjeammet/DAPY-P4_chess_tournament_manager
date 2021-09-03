@@ -1,10 +1,11 @@
-from chess import views
+from chess.views import HomeView
 from ..models import Tournament, Database, TIME_CONTROL_TYPE
+
 
 class HomeController:
     """Controller for Home menu."""
     def __init__(self):
-        self.view = views.HomeView()
+        self.view = HomeView()
         self.database = Database()
 
     def run(self):
@@ -40,7 +41,7 @@ class HomeController:
         self.view.print_tournament_details_header()
         if len(tournaments_list) == 0:
             self.view.print_alert("Aucun tournoi à afficher.")
-        else:            
+        else:        
             for tournament in tournaments_list:
                 self.view.print_tournament_details(tournament)
         return None
@@ -61,13 +62,13 @@ class HomeController:
 
     def get_valid_tournament_name(self):
         return self.view.get_name()
-    
+
     def get_valid_location(self):
         return self.view.get_location()
 
     def get_valid_date(self):
         return self.view.get_date()
-    
+
     def get_valid_time_control(self):
         time_control = self.view.get_time_control()
         if time_control in TIME_CONTROL_TYPE:

@@ -2,13 +2,13 @@ import re
 
 from tinydb import Query
 
-from chess import views
+from chess.views import PlayerHomeView
 from ..models import Database, Player
 
 class PlayerMenuController:
     """Controller for Player menu."""
     def __init__(self):
-        self.view = views.PlayerHomeView()
+        self.view = PlayerHomeView()
         self.database = Database()
 
     def run(self):

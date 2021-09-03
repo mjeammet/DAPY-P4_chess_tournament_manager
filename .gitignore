@@ -1,5 +1,3 @@
 env/
 __pycache__/
-tournament/__pycache__/
-tournament/models/__pycache__/
 chess_database.json

@@ -1,13 +1,14 @@
+from chess.views.tournamentmenuview import TournamentHomeView
 from tinydb import Query
 
-from chess import views
+from chess.views import TournamentHomeView
 from ..models import Player, Tournament, Round, Match, Database, PLAYERS_PER_TOURNAMENT, ROUNDS_PER_TOURNAMENT
 
 
 class TournamentMenuController:
     """Controller for Tournament menu."""
     def __init__(self):
-        self.view = views.TournamentHomeView()
+        self.view = TournamentHomeView()
         self.current_tournament = None
         self.database = Database()
 
