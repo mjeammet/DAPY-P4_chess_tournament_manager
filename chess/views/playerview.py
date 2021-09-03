@@ -14,19 +14,19 @@ class PlayerHomeView(BaseView):
         )
 
     def get_first_name(self):
-        return input('Prénom :')
+        return input('Prénom : ')
     
     def get_last_name(self):
-        return input('Nom de famille :')
+        return input('Nom de famille : ')
 
     def get_gender(self):
-        return input("Genre ('F','M','X'\) :")
+        return input("Genre (F, M ou X) : ")
     
     def get_birth_date(self):
-        return input('Année de naissance (format DD-MM-YYYY) :')
+        return input('Date de naissance (format DD/MM/YYYY) : ')
 
     def get_ranking(self):
-        return input('Classement (entier positif) :')
+        return input('Classement (entier positif) : ')
 
     def print_duplicate_alert(self, inputted_data, duplicate_list):
         print(
@@ -57,3 +57,7 @@ class PlayerHomeView(BaseView):
 
     def get_updated_info(self):
         return input("Veuillez entrer la nouvelle valeur : ")
+
+
+    def print_adding_new_player(self):
+        print("Ajout d'un nouveau participant (laissez prénom et/ou nom vide pour annuler).")

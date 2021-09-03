@@ -22,12 +22,15 @@ class HomeView(BaseView):
 
     def get_name(self):
         return input("Nom du tournoi : ")
-    
+
     def get_location(self):
         return input("Lieu du tournoi : ")
-    
-    def get_date(self):
-        return input("Date du tournoi : ")
+
+    def get_start_date(self):
+        return input("Date de début du tournoi (au format JJ/MM/AAAA): ")
+
+    def get_end_date(self):
+        return input("Date de fin du tournoi (au format JJ/MM/AAAA). : ")
 
     def get_time_control(self):
         return input("Type de contrôle du temps (peut être 'bullet', 'blitz' ou 'fast') : ")

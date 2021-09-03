@@ -1,5 +1,8 @@
 PLAYERS_PER_TOURNAMENT = 8
-ROUNDS_PER_TOURNAMENT = 4
+MAX_ROUNDS = 4
+SCORE_VICTORY = 1
+SCORE_DRAW = 0.5
+SCORE_DEFEAT = 0
 
 TIME_CONTROL_TYPE = [
     "bullet",
@@ -12,10 +15,11 @@ class Tournament:
     """Un tournoi
     TODO Gestion du temps"""
 
-    def __init__(self, name, location, date, rounds, players, time_control, description):
+    def __init__(self, name, location, date_start, date_end, rounds, players, time_control, description):
         self.name = name
         self.location = location
-        self.date = date
+        self.date_start = date_start
+        self.date_end = date_end
         self.rounds = [Round(
             round_info['name'],
             round_info['start_datetime'],
