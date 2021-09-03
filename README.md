@@ -1,6 +1,7 @@
 # tournament_manager tournaments manager
 
 Marie Jeammet - v1.0 - 2021/08.
+
 Contact : marie.jeammet@protonmail.com
 
 ## Context
@@ -21,6 +22,7 @@ Clone project the project to desired location:
 In the project's directory, create and activate the environment:
 
 `$ python3 -m venv env`
+
 `$ source env/bin/activate`
 
 and install required packages with:
