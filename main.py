@@ -1,5 +1,4 @@
-from chess.controllers.controllers import ApplicationController
-
+from chess.controllers import ApplicationController
 
 def main():
     app = ApplicationController()
