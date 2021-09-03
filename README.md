@@ -39,7 +39,7 @@ Follow textual instructions on the screen to
 - Starts a new round and add round results
 - Prints reports on players, tournaments, rounds and matches 
 
-To navigate, simply input the number corresponding to your next desired action. 
+To navigate, simply enter the number corresponding to your next desired action. 
 
 ## Flake8
 
@@ -47,4 +47,4 @@ flake8 was used in this projet to make sure PEP 8 recommandations where followed
 
 To generate a new report : 
 
-`$ flake8 --max-line-length 119 --format=html --htmldir=flake8_rapport --max-line-length 119 --exclude env,__pycache__,__init__.py`
+`$ flake8 --format=html --htmldir=flake8_rapport --max-line-length 119 --exclude env,__pycache__,__init__.py`

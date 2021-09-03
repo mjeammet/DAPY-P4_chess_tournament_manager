@@ -23,6 +23,18 @@ class PlayerMenuController:
             self.view.press_enter()
             return self.run()
         elif next_action == '2':
+
+            first_name = self.get_valid_first_name()
+            last_name = self.get_valid_last_name()
+            list_of_matches = self.find_player_by_name(first_name, last_name)
+            if len(list_of_matches) != 0:
+                self.view.print_player_details(list_of_matches)
+            else:
+                self.view.alert_user("Aucune correspondance dans la base de données.")
+
+            self.view.press_enter()
+            return self.run()
+        elif next_action == '3':
             # Create new player and add them to the database
             new_player = self.create_new_player()
             if new_player is not None:
@@ -32,7 +44,7 @@ class PlayerMenuController:
                 )
             self.view.press_enter
             return self.run()
-        elif next_action == "3":
+        elif next_action == "4":
             self.update_player_infos()
             return self.run()
         elif next_action == "0":
@@ -63,13 +75,14 @@ class PlayerMenuController:
             - None
         Returns:
             - a validated string."""
+        pattern = r"\w+[-]?\w+"
         inputted_name = self.view.get_first_name()
         if inputted_name == "":
             return None
-        elif re.fullmatch("[A-Za-z\-ùàéè]*", inputted_name):
+        elif re.fullmatch(pattern, inputted_name):
             return inputted_name
         else:
-            self.view.alert_user("Le prénom ne peut pas être vide et doit être uniquement constitué de lettres.")
+            self.view.alert_user("Le prénom doit être uniquement constitué de lettres (ou '-').")
             return self.get_valid_first_name()
 
     def get_valid_last_name(self):
@@ -78,13 +91,14 @@ class PlayerMenuController:
             - None
         Returns:
             - a validated string."""
+        pattern = r'[A-Za-z(\s)]*'
         inputted_name = self.view.get_last_name()
         if inputted_name == "":
             return None
-        elif re.fullmatch("[A-Za-z\s]*", inputted_name):
+        elif re.fullmatch(pattern, inputted_name):
             return inputted_name
         else:
-            self.view.alert_user("Le nom de famille doit être uniquement constitué de lettres (ou de \"-\").")
+            self.view.alert_user("Le nom de famille doit être uniquement constitué de lettres.")
             return self.get_valid_last_name()
 
     def get_valid_gender(self):
@@ -121,12 +135,9 @@ class PlayerMenuController:
             self.view.type_error("integer")
             return self.get_valid_ranking()
 
-    def check_existing_duplicate(self, new_player_info):
-        """From inputted player info, check for duplicate in the database."""
-        first_name = new_player_info[0]
-        last_name = new_player_info[1]
-        return self.database.players_table.search(
-            (Query().first_name == first_name) & (Query().last_name == last_name))
+    def find_player_by_name(self, first_name, last_name):
+        players_table = self.database.players_table
+        return players_table.search((Query().first_name == first_name) & (Query().last_name == last_name))
 
     def create_new_player(self):
         """Add a player to the database.
@@ -136,7 +147,7 @@ class PlayerMenuController:
         new_player_data = self.get_new_player_info()
         if new_player_data is None:
             return None
-        existing_duplicate = self.check_existing_duplicate(new_player_data)
+        existing_duplicate = self.find_player_by_name(new_player_data[0], new_player_data[1])
         # TODO transformer en une fonction search_player() qui servira aussi à aller update les infos du player
         if existing_duplicate != []:
             self.view.print_duplicate_alert(new_player_data, existing_duplicate)
@@ -177,33 +188,35 @@ class PlayerMenuController:
         else:
             self.view.notify_invalid_choice()
             return None
-            
+
         updated_info = self.view.get_updated_info()
         self.database.players_table.update({updated_field: updated_info}, doc_ids=[player_id])
         return None
 
+
 # Had to put outside class to allow call from playercontroller
-def list_players(self, players_list, score = False):
-        """Lists players."""
-        sorting_parameter = self.view.get_sorting_parameter(score)
-        if sorting_parameter == "1":
-            sorted_list = sorted(players_list, key=lambda x: x['last_name'])
-        elif sorting_parameter == "2":
-            sorted_list = sorted(players_list, key=lambda x: x['ranking'], reverse=True)
-        elif sorting_parameter == "3" and score == True:
-            sorted_list = sorted(players_list, key=lambda x: x['score'], reverse=True)
-        else:
-            self.view.notify_invalid_choice()
-            return None
-        
-        self.view.print_player_details(sorted_list, score)
+def list_players(self, players_list, score=False):
+    """Lists players."""
+    sorting_parameter = self.view.get_sorting_parameter(score)
+    if sorting_parameter == "1":
+        sorted_list = sorted(players_list, key=lambda x: x['last_name'])
+    elif sorting_parameter == "2":
+        sorted_list = sorted(players_list, key=lambda x: x['ranking'], reverse=True)
+    elif sorting_parameter == "3" and score is True:
+        sorted_list = sorted(players_list, key=lambda x: x['score'], reverse=True)
+    else:
+        self.view.notify_invalid_choice()
         return None
+
+    self.view.print_player_details(sorted_list, score)
+    return None
+
 
 # Had to put outside class to allow call from playercontroller
 def get_valid_player_id(self):
-        inputted_id = self.view.get_player_id()
-        try:
-            return int(inputted_id)
-        except ValueError:
-            self.view.type_error("integer")
-            return get_valid_player_id(self)
+    inputted_id = self.view.get_player_id()
+    try:
+        return int(inputted_id)
+    except ValueError:
+        self.view.type_error("integer")
+        return get_valid_player_id(self)

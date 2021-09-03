@@ -25,7 +25,7 @@ class HomeController:
         elif next_action == "2":
             # Creation of a new tournament
             new_tournament_infos = self.get_new_tournament_info()
-            if new_tournament_infos is not None:                
+            if new_tournament_infos is not None:
                 new_tournament = Tournament(*new_tournament_infos)
                 self.add_new_tournament_to_database(new_tournament)
             return self.run()
@@ -63,7 +63,7 @@ class HomeController:
             location = self.get_valid_location()
             date_beginning = self.get_valid_date("start")
             date_ending = self.get_valid_date("end")
-            # TODO check end_date is after beginning date 
+            # TODO check end_date is after beginning date
             time_control = self.get_valid_time_control()
             description = self.view.get_description()
             return [name, location, date_beginning, date_ending, [], {}, time_control, description]
@@ -90,12 +90,12 @@ class HomeController:
             inputted_date = self.view.get_end_date()
         elif date_type == "birth":
             inputted_date = self.view.get_birth_date()
-        
+
         split_date = inputted_date.split("/")
         try:
             formatted_date = date(int(split_date[2]), int(split_date[1]), int(split_date[0]))
             # format the French way
-            formatted_date_fr = formatted_date.strftime('%d/%m/%Y')            
+            formatted_date_fr = formatted_date.strftime('%d/%m/%Y')
         except IndexError:
             self.view.alert_user("La date de naissance doit être au format JJ/MM/AAAA (mauvais format).")
             return self.get_valid_date(date_type)
@@ -104,8 +104,6 @@ class HomeController:
             return self.get_valid_date(date_type)
 
         return formatted_date_fr
-
-
 
     def get_valid_time_control(self):
         time_control = self.view.get_time_control()

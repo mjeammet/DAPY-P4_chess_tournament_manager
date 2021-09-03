@@ -28,17 +28,17 @@ class BaseView():
     def alert_user(self, alert_text):
         print(alert_text)
 
-    def print_player_details(self, unserialized_players_list, score = False):
+    def print_player_details(self, unserialized_players_list, score=False):
         """Prints a list of players."""
-        header = "Prénom\t\tNom\t\tSexe\t\tDate de naissance\tClassement\t"
-        if score: 
+        header = "Id\tPrénom\t\tNom\t\tSexe\t\tDate de naissance\tClassement\t"
+        if score:
             header += "Score"
         print(header)
         if unserialized_players_list == []:
             print("- Aucun joueur à afficher -")
         else:
             for player in unserialized_players_list:
-                player_line = f'{player["first_name"]}\t'
+                player_line = f'{player.doc_id}\t{player["first_name"]}\t'
                 if len(player["first_name"]) < 8:
                     player_line += '\t'
                 player_line += f' {player["last_name"]}\t'
@@ -48,7 +48,6 @@ class BaseView():
                 if score:
                     player_line += f'{player["score"]}'
                 print(player_line)
-        return None
 
     def press_enter(self):
         input("Retour au menu de sélection.")
@@ -85,14 +84,16 @@ class BaseView():
     def print_tournament_details(self, tournament_details):
         """Prints tournament details."""
         tournament_line = f"{tournament_details['name']}"
-        while len(tournament_line) < 32: tournament_line += " "
+        while len(tournament_line) < 32:
+            tournament_line += " "
         tournament_line += f"{tournament_details['location']}\t"
-        while len(tournament_line) < 46: tournament_line += " "
+        while len(tournament_line) < 46:
+            tournament_line += " "
         tournament_line += f"{tournament_details['date_start']}\t"
         tournament_line += f"{tournament_details['date_end']}\t"
         tournament_line += f"{tournament_details['time_control']}\t\t"
         tournament_line += f"{len(tournament_details['rounds'])}\t"
-        print(tournament_line)        
+        print(tournament_line)
 
     def type_error(self, type):
         print(f"Doit être de type {type}.")
