@@ -1,4 +1,4 @@
-from chess.controllers import ApplicationController
+from tournament_manager.controllers import ApplicationController
 
 
 def main():

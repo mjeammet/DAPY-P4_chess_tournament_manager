@@ -1,5 +1,5 @@
 from tinydb import TinyDB
-DATABASE_PATH = "./chess_database.json"
+DATABASE_PATH = "./tournament_manager_database.json"
 
 
 class Database:

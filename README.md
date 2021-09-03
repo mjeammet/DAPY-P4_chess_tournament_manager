@@ -1,4 +1,4 @@
-# Chess tournaments manager
+# tournament_manager tournaments manager
 
 Marie Jeammet - v1.0 - 2021/08.
 Contact : marie.jeammet@protonmail.com

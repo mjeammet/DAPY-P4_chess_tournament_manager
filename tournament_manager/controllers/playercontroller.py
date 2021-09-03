@@ -3,7 +3,7 @@ from datetime import date
 
 from tinydb import Query
 
-from chess.views import PlayerHomeView
+from tournament_manager.views import PlayerHomeView
 from ..models import Database, Player
 
 

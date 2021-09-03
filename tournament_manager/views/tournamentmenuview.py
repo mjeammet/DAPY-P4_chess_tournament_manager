@@ -1,4 +1,4 @@
-from chess.models.tournament import SCORE_DRAW
+from tournament_manager.models.tournament import SCORE_DRAW
 from .baseview import BaseView
 
 

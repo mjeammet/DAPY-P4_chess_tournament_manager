@@ -1,4 +1,4 @@
-from chess.views import EndView
+from tournament_manager.views import EndView
 
 
 class EndController:

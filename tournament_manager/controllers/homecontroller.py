@@ -2,7 +2,7 @@ from datetime import date
 
 from tinydb import Query
 
-from chess.views import HomeView
+from tournament_manager.views import HomeView
 from ..models import Tournament, Database, TIME_CONTROL_TYPE
 
 
