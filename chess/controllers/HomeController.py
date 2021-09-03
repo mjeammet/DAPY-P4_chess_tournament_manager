@@ -28,7 +28,6 @@ class HomeController:
             if new_tournament_infos is not None:                
                 new_tournament = Tournament(*new_tournament_infos)
                 self.add_new_tournament_to_database(new_tournament)
-            self.view.press_enter()
             return self.run()
         elif next_action == "3":
             return "tournament_menu"
@@ -44,7 +43,7 @@ class HomeController:
         tournaments_list = self.database.tournaments_table.all()
         self.view.print_tournament_details_header()
         if len(tournaments_list) == 0:
-            self.view.print_alert("Aucun tournoi à afficher.")
+            self.view.alert_user("Aucun tournoi à afficher.")
         else:
             for tournament in tournaments_list:
                 self.view.print_tournament_details(tournament)
@@ -60,22 +59,24 @@ class HomeController:
         name = self.get_valid_tournament_name()
         if name is None:
             return None
-        location = self.get_valid_location()
-        date_beginning = self.get_valid_date("start")
-        date_ending = self.get_valid_date("end")
-        # TODO check end_date is after beginning date 
-        time_control = self.get_valid_time_control()
-        description = self.view.get_description()
-        return [name, location, date_beginning, date_ending, [], {}, time_control, description]
+        else:
+            location = self.get_valid_location()
+            date_beginning = self.get_valid_date("start")
+            date_ending = self.get_valid_date("end")
+            # TODO check end_date is after beginning date 
+            time_control = self.get_valid_time_control()
+            description = self.view.get_description()
+            return [name, location, date_beginning, date_ending, [], {}, time_control, description]
 
     def get_valid_tournament_name(self):
+        """Get an unique tournament name."""
         name = self.view.get_name()
         existing_tournament = self.database.tournaments_table.search(Query().name == name)
         if len(existing_tournament) == 0:
             return name
         else:
             tournament_id = existing_tournament[0].doc_id
-            self.view.print_alert(f"Un tournoi porte déjà ce nom dans la base de données (id = {tournament_id})")
+            self.view.alert_user(f"Un tournoi porte déjà ce nom dans la base de données (id = {tournament_id})")
             self.view.cancelled()
             return None
 
@@ -96,10 +97,10 @@ class HomeController:
             # format the French way
             formatted_date_fr = formatted_date.strftime('%d/%m/%Y')            
         except IndexError:
-            self.view.print_alert("La date de naissance doit être au format JJ/MM/AAAA (mauvais format).")
+            self.view.alert_user("La date de naissance doit être au format JJ/MM/AAAA (mauvais format).")
             return self.get_valid_date(date_type)
         except ValueError:
-            self.view.print_alert("La date de naissance doit être au format JJ/MM/AAAA (date impossible).")
+            self.view.alert_user("La date de naissance doit être au format JJ/MM/AAAA (date impossible).")
             return self.get_valid_date(date_type)
 
         return formatted_date_fr
@@ -111,7 +112,7 @@ class HomeController:
         if time_control in TIME_CONTROL_TYPE:
             return time_control
         else:
-            self.view.print_alert("Time control doit être \"bullet\" ou \"blitz\" ou \"rapide\"")
+            self.view.alert_user("Time control doit être \"bullet\" ou \"blitz\" ou \"rapide\"")
             self.get_valid_time_control()
 
     def add_new_tournament_to_database(self, tournament):
@@ -123,5 +124,5 @@ class HomeController:
         table_name = "tournaments"
         tournament_id = self.database.add_to_database(table_name, tournament)
         alert = f'---\n{tournament.name} ajouté.e à la base de données avec l\'id {tournament_id}.'
-        self.view.print_alert(alert)
+        self.view.alert_user(alert)
         return None

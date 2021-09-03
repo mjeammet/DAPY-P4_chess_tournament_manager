@@ -26,7 +26,6 @@ class TournamentMenuController:
                     self.current_tournament = selected_tournament
                 else:
                     self.view.cancelled()
-                    self.view.press_enter()
                     return self.run()
 
         if next_action == "1":
@@ -37,13 +36,13 @@ class TournamentMenuController:
             # Selected add players to tournament        
             if len(self.current_tournament.players) >= PLAYERS_PER_TOURNAMENT:
                 alert = "Le tournoi est déjà plein, vous ne pouvez pas ajouter de participant.es."
-                self.view.print_alert(alert)
+                self.view.alert_user(alert)
             else:
                 while len(self.current_tournament.players) != 8:
                     self.add_player_to_tournament()
 
                 # notifies if it was the last player
-                self.view.print_alert("8ème participant.e ajouté.e au tournoi. Le tournoi est désormais plein ! ")
+                self.view.alert_user("8ème participant.e ajouté.e au tournoi. Le tournoi est désormais plein ! ")
 
             self.view.press_enter()
             return self.run()
@@ -59,7 +58,7 @@ class TournamentMenuController:
                 serialized_rounds = [round.serialize() for round in self.current_tournament.rounds]
                 self.database.tournaments_table.update({"rounds": serialized_rounds}, Query().name == self.current_tournament.name)
             else:
-                self.view.print_alert("Un nouveau tour ne peut pas commencer (En attente de nouveaux résultats ou bien maximum de tours atteinte).")
+                self.view.alert_user("Un nouveau tour ne peut pas commencer (En attente de nouveaux résultats ou bien maximum de tours atteinte).")
             
             self.view.press_enter()
             return self.run()        
@@ -70,7 +69,7 @@ class TournamentMenuController:
             round_to_update = self.current_tournament.rounds[-1]
             for match_to_update in round_to_update.matchs:
                 # print(match_to_update)
-                self.view.print_alert(f"Updating match {match_to_update[0][0]} contre {match_to_update[1][0]}")
+                self.view.alert_user(f"Updating match {match_to_update[0][0]} contre {match_to_update[1][0]}")
                 match_index = round_to_update.matchs.index(match_to_update)
 
                 new_match = self.get_updated_match(match_to_update)
@@ -132,11 +131,11 @@ class TournamentMenuController:
                 for round in self.current_tournament.rounds:
                     self.view.print_round_details(round)
         else: 
-            self.view.print_alert("Aucun round à afficher.")
+            self.view.alert_user("Aucun round à afficher.")
 
     def update_players_in_database(self):
         """Update players dictionary in the database"""
-        # self.view.print_alert(self.current_tournament.players)
+        # self.view.alert_user(self.current_tournament.players)
         self.database.tournaments_table.update({"players": self.current_tournament.players}, Query().name == self.current_tournament.name)
 
     def update_rounds_in_database(self):
@@ -163,7 +162,7 @@ class TournamentMenuController:
         #unserialize_tournament()
         tournament = self.unserialize_object(serialized_tournament, type="tournaments")
         name = tournament.name
-        self.view.print_alert(f"Tournoi '{name}' sélectionné comme tournoi en cours.")
+        self.view.alert_user(f"Tournoi '{name}' sélectionné comme tournoi en cours.")
         return tournament
         
     def add_player_to_tournament(self):
@@ -174,7 +173,7 @@ class TournamentMenuController:
         # Check if player is not already registered in tournament
         if len(self.current_tournament.players) > 0:
             if str(player_id) in self.current_tournament.players.keys():
-                self.view.print_alert("Player already in tournament.")
+                self.view.alert_user("Player already in tournament.")
                 return None
 
         # Making sure que le player est bien dans la DB
@@ -182,7 +181,7 @@ class TournamentMenuController:
         if db_match is not None:
             self.current_tournament.players[str(player_id)] = 0
             self.database.tournaments_table.update({"players": self.current_tournament.players}, Query().name == self.current_tournament.name)  
-            self.view.print_alert("Joueur ajouté.")
+            self.view.alert_user("Joueur ajouté.")
         else:
             self.view.id_not_found(player_id, "players")
 
@@ -210,7 +209,7 @@ class TournamentMenuController:
         round_endtime = None
         
         new_round = Round(round_name, round_starttime, round_endtime, new_round_matchs)
-        self.view.print_alert(f'{new_round.name} créé le {new_round.start_datetime}.')
+        self.view.alert_user(f'{new_round.name} créé le {new_round.start_datetime}.')
         return new_round 
 
     def check_ready_for_new_round(self):
@@ -224,7 +223,7 @@ class TournamentMenuController:
             error_message = (
                 "Le round ne peut pas commencer car le nombre de joueurs est incorrect."
                 f"Actuellement {len(self.current_tournament.players)} joueurs au lieu de {PLAYERS_PER_TOURNAMENT}.")
-            self.view.print_alert(error_message)
+            self.view.alert_user(error_message)
             return False
         elif len(self.current_tournament.rounds) >= MAX_ROUNDS:
             self.view.print_reached_max_rounds(MAX_ROUNDS)
@@ -257,7 +256,7 @@ class TournamentMenuController:
             return [player.doc_id for player in sorted(entrants_infos, key=lambda x: (x['score'], x['ranking']), reverse=True)]
         else:
             message = (f'Cannot sort by {by}. Please sort by \'score\', \'ranking\' or \'name\' instead.')
-            self.view.print_alert(message)
+            self.view.alert_user(message)
 
     def pair_players(self, players_ordered_list, round_number):
         """Pairs players together from player list.
@@ -324,7 +323,7 @@ class TournamentMenuController:
         if inputted_score in [SCORE_VICTORY, SCORE_DRAW, SCORE_DEFEAT]:
             return inputted_score
         else:
-            self.view.print_alert(f'Le score doit être 0, 1 ou 0.5. Ne peut pas être {inputted_score}')
+            self.view.alert_user(f'Le score doit être 0, 1 ou 0.5. Ne peut pas être {inputted_score}')
             return self.get_valid_score(player_id)
 
     def get_updated_match(self, match):
@@ -350,5 +349,5 @@ class TournamentMenuController:
             return object
         except AttributeError:
             error_message = "Object provided is not valid."
-            self.view.print_alert(error_message)
+            self.view.alert_user(error_message)
             return None

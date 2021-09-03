@@ -31,14 +31,14 @@ class PlayerHomeView(BaseView):
     def print_duplicate_alert(self, inputted_data, duplicate_list):
         print(
             "Vous souhaitez ajouter:\n"
-            f"      {inputted_data[0]} {inputted_data[1]} ({inputted_data[2]}), né.e le {inputted_data[3]} et classé {inputted_data[4]}.\n"
+            f"      {inputted_data[0]} {inputted_data[1]} ({inputted_data[3]}), né.e le {inputted_data[2]} et classé {inputted_data[4]}.\n"
             "La base de données contient déjà une ou des entrées similaires:"
         )
         for duplicate in duplicate_list:
             print(f"      {duplicate['first_name']} {duplicate['last_name']} ({duplicate['gender']}), né.e le {duplicate['birth_date']} et classé {duplicate['ranking']}.\n")
         print(
             "Que souhaitez-vous faire ?\n"
-            "1. Ecraser le joueur existant avec les nouvelles données.\n"
+            "1. Modifier le joueur existant dans la base de données.\n"
             "2. Ajouter quand même un nouveau joueur.\n"
             "3. Annuler l'ajout.\n"            
         )

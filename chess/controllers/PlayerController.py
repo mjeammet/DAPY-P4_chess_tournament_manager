@@ -27,7 +27,7 @@ class PlayerMenuController:
             new_player = self.create_new_player()
             if new_player is not None:
                 new_player_id = self.database.add_to_database("players", new_player)
-                self.view.print_alert(
+                self.view.alert_user(
                     f'---\n{new_player.first_name} {new_player.last_name} succesfully added with id {new_player_id}.'
                 )
             self.view.press_enter
@@ -69,7 +69,7 @@ class PlayerMenuController:
         elif re.fullmatch("[A-Za-z\-ùàéè]*", inputted_name):
             return inputted_name
         else:
-            self.view.print_alert("Le prénom ne peut pas être vide et doit être uniquement constitué de lettres.")
+            self.view.alert_user("Le prénom ne peut pas être vide et doit être uniquement constitué de lettres.")
             return self.get_valid_first_name()
 
     def get_valid_last_name(self):
@@ -84,7 +84,7 @@ class PlayerMenuController:
         elif re.fullmatch("[A-Za-z\s]*", inputted_name):
             return inputted_name
         else:
-            self.view.print_alert("Le nom de famille doit être uniquement constitué de lettres (ou de \"-\").")
+            self.view.alert_user("Le nom de famille doit être uniquement constitué de lettres (ou de \"-\").")
             return self.get_valid_last_name()
 
     def get_valid_gender(self):
@@ -92,7 +92,7 @@ class PlayerMenuController:
         if inputted_gender.upper() in ['F', 'M', 'X']:
             return inputted_gender
         else:
-            self.view.print_alert("Le genre doit être 'F', 'M' or 'X'.")
+            self.view.alert_user("Le genre doit être 'F', 'M' or 'X'.")
             return self.get_valid_gender()
 
     def get_valid_birth_date(self):
@@ -104,10 +104,10 @@ class PlayerMenuController:
             formatted_date_fr = formatted_date.strftime('%d/%m/%Y')
             return formatted_date_fr
         except IndexError:
-            self.view.print_alert("La date de nasisance doit être au format JJ-MM-AAAA.")
+            self.view.alert_user("La date de nasisance doit être au format JJ-MM-AAAA.")
             return self.get_valid_birth_date()
         except ValueError:
-            self.view.print_alert("La date de nasisance doit être au format JJ-MM-AAAA.")
+            self.view.alert_user("La date de nasisance doit être au format JJ-MM-AAAA.")
             return self.get_valid_birth_date()
 
     def get_valid_ranking(self):
@@ -144,14 +144,13 @@ class PlayerMenuController:
             if next_action == '1':
                 self.update_player_infos()
             elif next_action == "2":
-                self.add_player_to_database(new_player_data)
+                return Player(*new_player_data)
             elif next_action == "3":
                 self.view.cancelled()
             else:
                 self.view.notify_invalid_choice()
         else:
-            new_player = Player(*new_player_data)
-        return new_player
+            return Player(*new_player_data)
 
     def update_player_infos(self, player_id="", first_name="", last_name="", gender="", birth_date="", ranking=""):
         """Update a player in the database."""
@@ -174,14 +173,14 @@ class PlayerMenuController:
             updated_field = "ranking"
         elif next_action == "0":
             self.view.cancelled()
-            self.view.press_enter()
-            return self.run()
+            return None
         else:
             self.view.notify_invalid_choice()
-            self.view.press_enter()
-            return self.run()
+            return None
+            
         updated_info = self.view.get_updated_info()
         self.database.players_table.update({updated_field: updated_info}, doc_ids=[player_id])
+        return None
 
 # Had to put outside class to allow call from playercontroller
 def list_players(self, players_list, score = False):

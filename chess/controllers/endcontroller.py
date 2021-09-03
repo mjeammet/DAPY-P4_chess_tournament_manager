@@ -16,8 +16,9 @@ class EndController:
             return "home"
         else:
             self.view.notify_invalid_choice()
-            return self.run()
+            self.view.cancelled()
+            return "home"
 
     def hard_stop(self):
-        self.view.print_alert("\nFermeture au clavier. Au revoir !")
+        self.view.alert_user("\nFermeture au clavier. Au revoir !")
         return None

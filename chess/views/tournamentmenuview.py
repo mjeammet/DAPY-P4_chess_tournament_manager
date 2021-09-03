@@ -78,5 +78,4 @@ class TournamentHomeView(BaseView):
 
     def no_tournament_in_database(self):
         print("Aucun tournoi dans la base de données.")
-        self.cancelled()
-        return self.press_enter()
+        return self.cancelled()

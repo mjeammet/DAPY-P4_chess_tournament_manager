@@ -7,7 +7,7 @@ class BaseView():
         return input('\nQue souhaitez-vous faire ? ').lower()
 
     def notify_invalid_choice(self):
-        print("Choix non valable!")
+        print("Choix non valable !")
 
     def get_tournament_id(self):
         try:
@@ -25,7 +25,7 @@ class BaseView():
             f"{bars}"
         )
 
-    def print_alert(self, alert_text):
+    def alert_user(self, alert_text):
         print(alert_text)
 
     def print_player_details(self, unserialized_players_list, score = False):
@@ -57,7 +57,7 @@ class BaseView():
         print(f"Id {id} introuvable dans la table \"{table_name}\".")
 
     def cancelled(self):
-        print("Opération annulée.")
+        return input("Opération annulée. Retour au menu de sélection.")
 
     def print_tournament_details_header(self):
         print(
